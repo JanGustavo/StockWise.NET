@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.RegularExpressions;
 
-namespace FrutasDoSeuZe.Models;
+namespace StockWiseNET.Models;
 
 public class Fruta
 {
@@ -13,22 +13,22 @@ public class Fruta
 
 
     public static bool IsPrecoValido(decimal preco) => preco >= 0 && preco <= 1000;
-    
 
-public static bool IsQuantidadeValida(int quantidade)
+
+    public static bool IsQuantidadeValida(int quantidade)
     {
         return quantidade > 0 && quantidade < 1000;
     }
 
-public static bool IsNomeValido(string nome)
+    public static bool IsNomeValido(string nome)
     {
-        Regex regex = new(@"^[A-Za-zÀ-ú\s]+$"); 
+        Regex regex = new(@"^[A-Za-zÀ-ú\s]+$");
         if (string.IsNullOrWhiteSpace(nome))
         {
             return true;
         }
 
-        if (regex.IsMatch(nome) && nome.Length <= 40 && nome.Length> 2)
+        if (regex.IsMatch(nome) && nome.Length <= 40 && nome.Length > 2)
         {
             return false;
         }

@@ -1,7 +1,7 @@
-﻿using FrutasDoSeuZe.Data;
-using FrutasDoSeuZe.Exceptions;
-using FrutasDoSeuZe.Models;
-using FrutasDoSeuZe.Repositories;
+﻿using StockWiseNET.Data;
+using StockWiseNET.Exceptions;
+using StockWiseNET.Models;
+using StockWiseNET.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 

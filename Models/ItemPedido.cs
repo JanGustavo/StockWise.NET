@@ -1,4 +1,4 @@
-﻿namespace FrutasDoSeuZe.Models;
+﻿namespace StockWiseNET.Models;
 
 
 public class ItemPedido

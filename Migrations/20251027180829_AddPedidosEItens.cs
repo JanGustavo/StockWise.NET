@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace FrutasDoSeuZe.Migrations
+namespace StockWiseNET.Migrations
 {
     /// <inheritdoc />
     public partial class AddPedidosEItens : Migration

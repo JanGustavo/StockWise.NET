@@ -1,5 +1,5 @@
-using FrutasDoSeuZe.Exceptions;
-﻿using FrutasDoSeuZe.Models;
+using StockWiseNET.Exceptions;
+using StockWiseNET.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -38,7 +38,7 @@ public class FrutaService
     }
 
     public async Task AtualizarAsync(string nome, decimal novoPreco, int novaQuantidade)
-    { 
+    {
         var frutaExistente = await _repo.GetByNameAsync(nome);
 
         if (frutaExistente is null)
@@ -51,7 +51,7 @@ public class FrutaService
         await _repo.SaveAsync();
     }
 
-    public async Task RemoverAsync(string nome) 
+    public async Task RemoverAsync(string nome)
     {
         var frutaExistente = await _repo.GetByNameAsync(nome);
 

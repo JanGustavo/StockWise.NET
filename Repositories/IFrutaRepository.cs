@@ -1,4 +1,4 @@
-﻿using FrutasDoSeuZe.Models;
+﻿using StockWiseNET.Models;
 
 
 public interface IFrutaRepository

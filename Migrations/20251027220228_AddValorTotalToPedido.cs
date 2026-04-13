@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace FrutasDoSeuZe.Migrations
+namespace StockWiseNET.Migrations
 {
     /// <inheritdoc />
     public partial class AddValorTotalToPedido : Migration

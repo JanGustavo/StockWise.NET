@@ -1,9 +1,9 @@
-﻿using FrutasDoSeuZe.Data;
-using FrutasDoSeuZe.Exceptions;
-using FrutasDoSeuZe.Models;
+﻿using StockWiseNET.Data;
+using StockWiseNET.Exceptions;
+using StockWiseNET.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace FrutasDoSeuZe.Repositories;
+namespace StockWiseNET.Repositories;
 
 public class FrutaRepository : IFrutaRepository
 {

@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using FrutasDoSeuZe.Models;
+using StockWiseNET.Models;
 
 
-namespace FrutasDoSeuZe.Data;
+namespace StockWiseNET.Data;
 
 public class AppDbContext : DbContext
 {
@@ -14,7 +14,17 @@ public class AppDbContext : DbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=frutas_db;Username=postgres;Password=JanGustavo083#");
+            // Carregar variáveis de ambiente do arquivo .env
+            DotNetEnv.Env.Load();
+
+            var host = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+            var port = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
+            var database = Environment.GetEnvironmentVariable("DB_NAME") ?? "frutas_db";
+            var username = Environment.GetEnvironmentVariable("DB_USER") ?? "postgres";
+            var password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "";
+
+            var connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password}";
+            optionsBuilder.UseNpgsql(connectionString);
         }
     }
 }

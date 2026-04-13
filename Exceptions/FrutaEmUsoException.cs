@@ -1,6 +1,6 @@
 using System;
 
-namespace FrutasDoSeuZe.Exceptions
+namespace StockWiseNET.Exceptions
 {
     public class FrutaEmUsoException : InvalidOperationException
     {

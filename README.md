@@ -48,7 +48,77 @@ Para configurar e executar o StockWise.NET em sua máquina local, siga os passos
 
 ### Pré-requisitos
 
-*   [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+*   [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+*   [PostgreSQL 12+](https://www.postgresql.org/download/)
+
+### Configuração de Variáveis de Ambiente
+
+1. **Copie o arquivo de exemplo:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edite o arquivo `.env` com suas credenciais do PostgreSQL:**
+   ```env
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=frutas_db
+   DB_USER=postgres
+   DB_PASSWORD=sua_senha_aqui
+   ```
+
+   ⚠️ **Importante:** O arquivo `.env` está no `.gitignore` e nunca será enviado ao repositório, protegendo suas credenciais.
+
+### Passos de Instalação
+
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/seu-usuario/stockwise-net.git
+   cd StockWise.NET
+   ```
+
+2. **Configure o banco de dados:**
+   ```bash
+   # Certifique-se de que o PostgreSQL está rodando e crie o banco de dados
+   psql -U postgres -c "CREATE DATABASE frutas_db;"
+   ```
+
+3. **Configure as variáveis de ambiente:**
+   ```bash
+   cp .env.example .env
+   # Edite o .env com suas credenciais
+   ```
+
+4. **Restaure as dependências:**
+   ```bash
+   dotnet restore
+   ```
+
+5. **Execute as migrations:**
+   ```bash
+   dotnet ef database update
+   ```
+
+6. **Execute a aplicação:**
+   ```bash
+   dotnet run
+   ```
+
+## Variáveis de Ambiente
+
+O projeto utiliza variáveis de ambiente para configurar a conexão com o PostgreSQL. As seguintes variáveis são suportadas:
+
+| Variável | Descrição | Padrão |
+|----------|-----------|---------|
+| `DB_HOST` | Host do servidor PostgreSQL | `localhost` |
+| `DB_PORT` | Porta do PostgreSQL | `5432` |
+| `DB_NAME` | Nome do banco de dados | `frutas_db` |
+| `DB_USER` | Usuário do PostgreSQL | `postgres` |
+| `DB_PASSWORD` | Senha do PostgreSQL | (vazio) |
+
+As variáveis são carregadas do arquivo `.env` automaticamente ao iniciar a aplicação.
+
+### Estrutura do Projeto
 *   [PostgreSQL](https://www.postgresql.org/download/)
 *   Um editor de código como [Visual Studio](https://visualstudio.microsoft.com/vs/) ou [VS Code](https://code.visualstudio.com/)
 
