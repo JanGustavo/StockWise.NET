@@ -1,0 +1,89 @@
+@page "/"
+@using StockWise.Domain.Entities
+@using StockWise.Blazor.Services
+@inject FrutaApiService ApiService
+
+<PageTitle>StockWise - Gestão de Frutas</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>🍉 Estoque do Seu Zé</h1>
+        <button class="btn btn-success" @onclick="AbrirModal">
+            <i class="bi bi-plus-circle"></i> Nova Fruta
+        </button>
+    </div>
+
+    @if (frutas == null)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p>Conectando à API...</p>
+        </div>
+    }
+    else if (!frutas.Any())
+    {
+        <div class="alert alert-info">Nenhuma fruta cadastrada no estoque.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var fruta in frutas)
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">🍍 @fruta.Nome</h5>
+                            <p class="card-text">
+                                <strong>Preço:</strong> R$ @fruta.Preco.ToString("F2") <br />
+                                <strong>Estoque:</strong> 
+                                <span class="badge @(fruta.Quantidade < 10 ? "bg-danger" : "bg-success")">
+                                    @fruta.Quantidade kg
+                                </span>
+                            </p>
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-outline-danger btn-sm" @onclick="() => DeletarFruta(fruta.Nome!)">
+                                    Remover
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Fruta>? frutas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarFrutas();
+    }
+
+    private async Task CarregarFrutas()
+    {
+        try
+        {
+            frutas = await ApiService.GetFrutasAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar frutas: {ex.Message}");
+        }
+    }
+
+    private async Task DeletarFruta(string nome)
+    {
+        await ApiService.RemoverAsync(nome);
+        await CarregarFrutas();
+    }
+
+    private void AbrirModal()
+    {
+        // Lógica para cadastrar nova fruta virá em seguida
+        Console.WriteLine("Abrir modal de cadastro");
+    }
+}
