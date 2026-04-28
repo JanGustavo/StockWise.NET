@@ -9,12 +9,52 @@ public class AppDbContext : DbContext
     public DbSet<Pedido> Pedidos { get; set; }
     public DbSet<ItemPedido> ItensPedido { get; set; }
 
+    public DbSet<Funcionario> Funcionarios { get; set; }
+
+    public DbSet<Cliente> Clientes { get; set; }
+
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
 
     public AppDbContext()
     {
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Configuração para Pedido - Cliente (1:N)
+        modelBuilder.Entity<Pedido>()
+            .HasOne(p => p.Cliente)
+            .WithMany(c => c.Pedidos)
+            .HasForeignKey(p => p.ClienteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Configuração de precisão decimal
+        modelBuilder.Entity<Pedido>()
+            .Property(p => p.ValorTotal)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Funcionario>()
+            .Property(f => f.Salario)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Fruta>()
+            .Property(f => f.Preco)
+            .HasPrecision(10, 2);
+            
+        // Configuração ItemPedido
+        modelBuilder.Entity<ItemPedido>()
+            .HasOne(ip => ip.Pedido)
+            .WithMany(p => p.Itens)
+            .HasForeignKey(ip => ip.PedidoId);
+
+        modelBuilder.Entity<ItemPedido>()
+            .HasOne(ip => ip.Fruta)
+            .WithMany()
+            .HasForeignKey(ip => ip.FrutaId);
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

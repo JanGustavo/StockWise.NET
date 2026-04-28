@@ -1,0 +1,187 @@
+@page "/pedidos"
+@using StockWise.Domain.Entities
+@using StockWise.Blazor.Services
+@using StockWise.Domain.Extensions
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+
+
+
+@inject PedidoApiService ApiService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>StockWise - Pedidos</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>📝 Histórico de Pedidos</h1>
+        <button class="btn btn-warning" @onclick="AbrirModal">Novo Pedido</button>
+    </div>
+
+    @if (pedidos == null)
+    {
+        <p>Carregando...</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Data</th>
+                    <th>Tipo</th>
+                    <th>Valor Total</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in pedidos)
+                {
+                    <tr>
+                        <td>#@p.Id</td>
+                        <td>@p.Data.ToShortDateString()</td>
+                        <td><span class="badge bg-secondary">@p.Tipo</span></td>
+                        <td>R$ @p.ValorTotal.ToString("F2")</td>
+                        <td>
+                            <button class="btn btn-outline-warning btn-sm me-2" @onclick="() => AbrirModalEdicao(p)">Editar</button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => DeletarAsync(p.Id, p.Tipo)">Cancelar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@* Modal de Cadastro *@
+@if (exibirModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">@(novoPedido.Id == 0 ? "📝 Novo Pedido" : "✏️ Editar Pedido")</h5>
+                    <button type="button" class="btn-close" @onclick="FecharModal"></button>
+                </div>
+                <EditForm Model="@novoPedido" OnValidSubmit="SalvarAsync">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tipo de Pedido</label>
+                            <InputText @bind-Value="novoPedido.Tipo" class="form-control" placeholder="Ex: Venda" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Descrição</label>
+                            <InputText @bind-Value="novoPedido.Descricao" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Valor Total (R$)</label>
+                            <InputNumber @bind-Value="novoPedido.ValorTotal" class="form-control" step="0.01" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">ID do Cliente</label>
+                            <InputNumber @bind-Value="novoPedido.ClienteId" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning px-4">@(novoPedido.Id == 0 ? "Salvar Pedido" : "Salvar Alterações")</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Pedido>? pedidos;
+
+    private Pedido novoPedido = new Pedido { Tipo = "" };
+
+    private string termoBusca = "";
+
+    private bool exibirModal = false;
+
+    private IEnumerable<Pedido> PedidosFiltrados =>
+        pedidos.FiltrarPorTexto(termoBusca, p => p.Tipo);
+
+    protected override async Task OnInitializedAsync() => await ListarAsync();
+
+    // --- Métodos CRUD ---
+
+    private async Task ListarAsync()
+    {
+        pedidos = await CrudExtensions.CarregarDadosSafeAsync(()
+        => ApiService.GetAllAsync(), "Pedidos");
+    }
+
+    private async Task SalvarAsync()
+    {
+        bool sucesso;
+
+        if (novoPedido.Id == 0)
+        {
+            sucesso = await CrudExtensions.SalvarSafeAsync(() => ApiService.CreateAsync(novoPedido), "Pedidos");
+        }
+        else
+        {
+            sucesso = await CrudExtensions.AtualizarSafeAsync(() => ApiService.UpdateAsync(novoPedido), "Pedidos");
+        }
+
+        if (sucesso)
+        {
+            FecharModal();
+            await ListarAsync();
+        }
+    }
+
+    private async Task DeletarAsync(int id, string nome)
+    {
+        var confirmou = await JSRuntime.InvokeAsync<bool>(
+            "confirm",
+            $"Deseja realmente remover o pedido '{nome}'?"
+         );
+
+        if (!confirmou)
+            return;
+
+        var sucesso = await CrudExtensions.DeletarSafeAsync(()
+        => ApiService.DeleteAsync(id), "Pedido");
+
+        if (sucesso)
+            await ListarAsync();
+    }
+    
+    private void AbrirModal()
+    {
+        novoPedido = new Pedido
+        {
+            Id = 0,
+            Data = DateTime.Now,
+            Tipo = "Venda",
+            Descricao = "",
+            ValorTotal = 0,
+            ClienteId = 0
+        }; 
+        exibirModal = true;
+    }
+
+    private void AbrirModalEdicao(Pedido pedido)
+    {
+        novoPedido = new Pedido
+        {
+            Id = pedido.Id,
+            Data = pedido.Data,
+            Tipo = pedido.Tipo,
+            Descricao = pedido.Descricao,
+            ValorTotal = pedido.ValorTotal,
+            ClienteId = pedido.ClienteId
+        };
+        exibirModal = true;
+    }
+
+    private void FecharModal()
+    {
+        exibirModal = false;
+    }
+}

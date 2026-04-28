@@ -1,0 +1,218 @@
+@page "/funcionarios"
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@using StockWise.Domain.Entities
+@using StockWise.Blazor.Services
+@using StockWise.Domain.Extensions
+@inject FuncionarioApiService ApiService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>StockWise - Funcionários</PageTitle>
+
+<div class="container mt-4">
+    @* Cabeçalho e Busca *@
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>🛠️ Equipe StockWise</h1>
+        <div class="d-flex gap-2">
+            <div class="input-group" style="max-width: 300px;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control border-start-0" placeholder="Buscar funcionário..."
+                       @bind="termoBusca" @bind:event="oninput" />
+            </div>
+            <button class="btn btn-info text-white" @onclick="AbrirModal">
+                <i class="bi bi-person-badge"></i> Novo Integrante
+            </button>
+        </div>
+    </div>
+
+    @* Estado de Carregamento *@
+    @if (funcionarios == null)
+    {
+        <div class="text-center mt-5">
+            <div class="spinner-border text-info" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-2 text-muted">Carregando equipe...</p>
+        </div>
+    }
+    @* Lista Vazia *@
+    else if (!FuncionariosFiltrados.Any())
+    {
+        <div class="alert alert-light shadow-sm border-0">
+            <i class="bi bi-info-circle me-2"></i>
+            @(string.IsNullOrWhiteSpace(termoBusca) ? "Nenhum integrante cadastrado." : $"Nenhum funcionário encontrado para '{termoBusca}'.")
+        </div>
+    }
+    @* Grid de Cards *@
+    else
+    {
+        <div class="row">
+            @foreach (var f in FuncionariosFiltrados)
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 shadow-sm border-0 border-top border-4 border-info">
+                        <div class="card-body">
+                            <h5 class="card-title text-info fw-bold">@f.Nome</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">
+                                <i class="bi bi-briefcase me-1"></i> @f.Cargo
+                            </h6>
+                            <hr class="my-2 opacity-25">
+                            <p class="card-text small mb-1">
+                                <strong>Salário:</strong> R$ @f.Salario.ToString("F2")
+                            </p>
+                            <p class="card-text small">
+                                <strong>Email:</strong> @f.Email
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 d-flex justify-content-end pb-3">
+                            <button class="btn btn-outline-warning btn-sm border-0 me-2" @onclick="() => AbrirModalEdicao(f)">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm border-0" @onclick="() => DeletarAsync(f.Id, f.Nome)">
+                                <i class="bi bi-trash"></i> Remover
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@* Modal de Cadastro *@
+@if (exibirModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">@(novoFuncionario.Id == 0 ? "🆕 Novo Integrante" : "✏️ Editar Integrante")</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModal"></button>
+                </div>
+                <EditForm Model="@novoFuncionario" OnValidSubmit="SalvarAsync">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nome Completo</label>
+                            <InputText @bind-Value="novoFuncionario.Nome" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Cargo</label>
+                            <InputText @bind-Value="novoFuncionario.Cargo" class="form-control"
+                                       placeholder="Ex: Vendedor" />
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Salário (R$)</label>
+                                <InputNumber @bind-Value="novoFuncionario.Salario" class="form-control" step="0.01"
+                                             required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                <InputText @bind-Value="novoFuncionario.Email" type="email" class="form-control" required />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Senha Inicial</label>
+                            <InputText @bind-Value="novoFuncionario.Senha" type="password" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                        <button type="submit" class="btn btn-info text-white px-4">@(novoFuncionario.Id == 0 ? "Salvar" : "Salvar Alterações")</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Funcionario>? funcionarios;
+    private Funcionario novoFuncionario = new();
+    private string termoBusca = "";
+    private bool exibirModal = false;
+
+    // Filtro reativo usando a extensão genérica
+    private IEnumerable<Funcionario> FuncionariosFiltrados =>
+        funcionarios.FiltrarPorTexto(termoBusca, f => f.Nome);
+
+    protected override async Task OnInitializedAsync() => await ListarAsync();
+
+    // --- Métodos CRUD ---
+
+    private async Task ListarAsync()
+    {
+        funcionarios = await CrudExtensions.CarregarDadosSafeAsync(() => ApiService.GetAllAsync(), "Funcionários");
+    }
+
+    private async Task SalvarAsync()
+    {
+        bool sucesso;
+
+        if (novoFuncionario.Id == 0)
+        {
+            sucesso = await CrudExtensions.SalvarSafeAsync(
+                () => ApiService.CreateAsync(novoFuncionario), "Funcionários"
+            );
+        }
+        else
+        {
+            sucesso = await CrudExtensions.AtualizarSafeAsync(
+                () => ApiService.UpdateAsync(novoFuncionario), "Funcionários"
+            );
+        }
+
+        if (sucesso)
+        {
+            FecharModal();
+            await ListarAsync();
+        }
+    }
+
+    private async Task DeletarAsync(int id, string nome)
+    {
+        var confirmou = await JSRuntime.InvokeAsync<bool>(
+            "confirm",
+            $"Deseja realmente remover o funcionário '{nome}'?"
+         );
+
+        if (!confirmou)
+            return;
+
+        var sucesso = await CrudExtensions.DeletarSafeAsync(
+            () => ApiService.DeleteAsync(id),
+            "Funcionário"
+        );
+
+        if (sucesso)
+            await ListarAsync();
+    }
+
+    // --- Controle de UI ---
+
+    private void AbrirModal()
+    {
+        novoFuncionario = new Funcionario { Nome = "", Email = "", Cargo = "", Salario = 0, Senha = "" };
+        exibirModal = true;
+    }
+
+    private void FecharModal() => exibirModal = false;
+
+
+private void AbrirModalEdicao(Funcionario funcionario)
+    {
+        novoFuncionario = new Funcionario
+        {
+            Id = funcionario.Id,
+            Nome = funcionario.Nome,
+            Email = funcionario.Email,
+            Cargo = funcionario.Cargo,
+            Salario = funcionario.Salario,
+            Senha = funcionario.Senha
+        };
+        exibirModal = true;
+    }
+
+}
+

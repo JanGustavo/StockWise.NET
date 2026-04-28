@@ -19,11 +19,19 @@ public class FrutaApiService
 
     public async Task CadastrarAsync(Fruta fruta)
     {
-        await _http.PostAsJsonAsync("api/frutas", fruta);
+        var r = await _http.PostAsJsonAsync("api/frutas", fruta);
+        r.EnsureSuccessStatusCode();
+    }
+
+    public async Task AtualizarAsync(Fruta fruta)
+    {
+        var r = await _http.PutAsJsonAsync($"api/frutas/{fruta.Nome}", fruta);
+        r.EnsureSuccessStatusCode();
     }
 
     public async Task RemoverAsync(string nome)
     {
-        await _http.DeleteAsync($"api/frutas/{nome}");
+        var r = await _http.DeleteAsync($"api/frutas/{nome}");
+        r.EnsureSuccessStatusCode();
     }
 }

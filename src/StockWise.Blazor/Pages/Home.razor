@@ -1,52 +1,72 @@
 @page "/"
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
 @using StockWise.Domain.Entities
 @using StockWise.Blazor.Services
+@using StockWise.Domain.Extensions
 @inject FrutaApiService ApiService
+@inject IJSRuntime JSRuntime
 
 <PageTitle>StockWise - Gestão de Frutas</PageTitle>
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>🍉 Estoque do Seu Zé</h1>
-        <button class="btn btn-success" @onclick="AbrirModal">
-            <i class="bi bi-plus-circle"></i> Nova Fruta
-        </button>
+        <div class="d-flex gap-2">
+            <div class="input-group" style="max-width: 300px;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control border-start-0" placeholder="Buscar fruta..." @bind="termoBusca"
+                       @bind:event="oninput" />
+            </div>
+            <button class="btn btn-success" @onclick="AbrirModal">
+                <i class="bi bi-plus-circle"></i> Nova Fruta
+            </button>
+        </div>
     </div>
 
     @if (frutas == null)
     {
-        <div class="text-center">
+        <div class="text-center mt-5">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Carregando...</span>
             </div>
-            <p>Conectando à API...</p>
+            <p class="mt-2">Conectando à API...</p>
         </div>
     }
-    else if (!frutas.Any())
+    else if (!FrutasFiltradas.Any())
     {
-        <div class="alert alert-info">Nenhuma fruta cadastrada no estoque.</div>
+        <div class="alert alert-info shadow-sm">
+            @(string.IsNullOrWhiteSpace(termoBusca) ? "Nenhuma fruta cadastrada no estoque." : $"Nenhuma fruta encontrada para '{termoBusca}'.")
+        </div>
     }
     else
     {
         <div class="row">
-            @foreach (var fruta in frutas)
+            @foreach (var fruta in FrutasFiltradas)
             {
                 <div class="col-md-4 mb-3">
-                    <div class="card shadow-sm">
+                    <div class="card h-100 shadow-sm border-0 border-top border-4 border-success">
                         <div class="card-body">
-                            <h5 class="card-title text-primary">🍍 @fruta.Nome</h5>
-                            <p class="card-text">
-                                <strong>Preço:</strong> R$ @fruta.Preco.ToString("F2") <br />
-                                <strong>Estoque:</strong> 
-                                <span class="badge @(fruta.Quantidade < 10 ? "bg-danger" : "bg-success")">
+                            <div class="d-flex justify-content-between">
+                                <h5 class="card-title text-success fw-bold">
+                                    @(fruta.Nome?.ObterEmojiFruta() ?? "🍎") @fruta.Nome
+                                </h5>
+                                <span class="badge @(fruta.Quantidade < 5 ? "bg-danger" : "bg-success") rounded-pill">
                                     @fruta.Quantidade kg
                                 </span>
-                            </p>
-                            <div class="d-flex justify-content-end">
-                                <button class="btn btn-outline-danger btn-sm" @onclick="() => DeletarFruta(fruta.Nome!)">
-                                    Remover
-                                </button>
                             </div>
+                            <p class="card-text mt-2 text-muted">
+                                <strong>Preço:</strong> R$ @fruta.Preco.ToString("F2")
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 d-flex justify-content-end pb-3">
+                            <button class="btn btn-outline-warning btn-sm border-0 me-2" @onclick="() => AbrirModalEdicao(fruta)">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm border-0" @onclick="() => DeletarFruta(fruta.Nome!)">
+                                <i class="bi bi-trash"></i> Remover
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -55,35 +75,135 @@
     }
 </div>
 
+@* Modal de Cadastro *@
+@if (exibirModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">@(novaFruta.Id == 0 ? "📦 Cadastrar Nova Fruta" : "✏️ Editar Fruta")</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModal"></button>
+                </div>
+                <EditForm Model="@novaFruta" OnValidSubmit="SalvarFruta">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nome da Fruta</label>
+                            <InputText @bind-Value="novaFruta.Nome" class="form-control" placeholder="Ex: Morango"
+                                       required disabled="@(novaFruta.Id != 0)" />
+                            @if (novaFruta.Id != 0)
+                            {
+                                <div class="form-text text-muted">O nome da fruta não pode ser alterado após o cadastro.</div>
+                            }
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Preço (R$)</label>
+                                <InputNumber @bind-Value="novaFruta.Preco" class="form-control" step="0.01" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Quantidade (kg)</label>
+                                <InputNumber @bind-Value="novaFruta.Quantidade" class="form-control" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                        <button type="submit" class="btn btn-success px-4">@(novaFruta.Id == 0 ? "Salvar Fruta" : "Salvar Alterações")</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<Fruta>? frutas;
+    private Fruta novaFruta = new();
+    private string termoBusca = "";
+    private bool exibirModal = false;
 
-    protected override async Task OnInitializedAsync()
+    private IEnumerable<Fruta> FrutasFiltradas =>
+        frutas.FiltrarPorTexto(termoBusca, f => f.Nome);
+
+    protected override async Task OnInitializedAsync() => await ListarAsync();
+
+    // --- Métodos CRUD ---
+
+    private async Task ListarAsync()
     {
-        await CarregarFrutas();
+        frutas = await CrudExtensions.CarregarDadosSafeAsync(
+            () => ApiService.GetFrutasAsync(), "Frutas");
     }
 
-    private async Task CarregarFrutas()
+    private async Task SalvarFruta()
     {
-        try
+        bool sucesso;
+
+        if (novaFruta.Id == 0)
         {
-            frutas = await ApiService.GetFrutasAsync();
+            sucesso = await CrudExtensions.SalvarSafeAsync(
+                () => ApiService.CadastrarAsync(novaFruta),
+                "Fruta"
+            );
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine($"Erro ao carregar frutas: {ex.Message}");
+            sucesso = await CrudExtensions.AtualizarSafeAsync(
+                () => ApiService.AtualizarAsync(novaFruta),
+                "Fruta"
+            );
+        }
+
+        if (sucesso)
+        {
+            await ListarAsync();
+            FecharModal();
         }
     }
 
     private async Task DeletarFruta(string nome)
     {
-        await ApiService.RemoverAsync(nome);
-        await CarregarFrutas();
+        var confirmou = await JSRuntime.InvokeAsync<bool>(
+            "confirm",
+            $"Deseja realmente remover a fruta '{nome}'?"
+        );
+
+        if (!confirmou)
+            return;
+
+        var sucesso = await CrudExtensions.DeletarSafeAsync(
+            () => ApiService.RemoverAsync(nome),
+            "Fruta"
+        );
+
+        if (sucesso)
+            await ListarAsync();
     }
 
     private void AbrirModal()
     {
-        // Lógica para cadastrar nova fruta virá em seguida
-        Console.WriteLine("Abrir modal de cadastro");
+        novaFruta = new Fruta
+        {
+            Id = 0,
+            Nome = "",
+            Preco = 0,
+            Quantidade = 0
+        };
+        exibirModal = true;
     }
+
+    private void AbrirModalEdicao(Fruta fruta)
+    {
+        novaFruta = new Fruta
+        {
+            Id = fruta.Id,
+            Nome = fruta.Nome,
+            Preco = fruta.Preco,
+            Quantidade = fruta.Quantidade
+        };
+        exibirModal = true;
+    }
+
+    private void FecharModal() => exibirModal = false;
 }

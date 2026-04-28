@@ -7,5 +7,9 @@ public class Pedido
     public required string Tipo { get; set; }
     public string? Descricao { get; set; }
     public decimal ValorTotal { get; set; } = 0;
+    
+    public int ClienteId { get; set; }
+    public Cliente? Cliente { get; set; }
+    
     public List<ItemPedido> Itens { get; set; } = new();
 }

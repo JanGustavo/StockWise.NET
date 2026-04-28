@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace StockWise.Domain.Entities;
 
 public class Fruta
 {
     public int Id { get; set; }
-    public string? Nome { get; set; }
+    public string Nome { get; set; } = null!;
     [Column(TypeName = "decimal(10,2)")]
     public decimal Preco { get; set; }
     public int Quantidade { get; set; }
@@ -22,16 +23,31 @@ public class Fruta
 
     public static bool IsNomeValido(string nome)
     {
-        Regex regex = new(@"^[A-Za-zÀ-ú\s]+$");
         if (string.IsNullOrWhiteSpace(nome))
-        {
-            return true;
-        }
-
-        if (regex.IsMatch(nome) && nome.Length <= 40 && nome.Length > 2)
         {
             return false;
         }
-        return true;
+
+        Regex regex = new(@"^[A-Za-zÀ-ú\s]+$");
+        return regex.IsMatch(nome) && nome.Length <= 40 && nome.Length > 2;
     }
+
+    Dictionary<string, string> Emojis = new()
+    {
+        { "Maçã", "🍎" },
+        { "Banana", "🍌" },
+        { "Laranja", "🍊" },
+        { "Uva", "🍇" },
+        { "Abacaxi", "🍍" },
+        { "Manga", "🥭" },
+        { "Morango", "🍓" },
+        { "Melancia", "🍉" },
+        { "Pêssego", "🍑" },
+        { "Cereja", "🍒" },
+        { "Limão", "🍋" },
+        { "Kiwi", "🥝" },
+        { "Melão", "🍈" },
+        { "Coco", "🥥" },
+        { "Pera", "🍐" }
+    };
 }
