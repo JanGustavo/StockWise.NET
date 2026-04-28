@@ -9,6 +9,7 @@
 
 
 @inject PedidoApiService ApiService
+@inject ClienteApiService ClienteService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>StockWise - Pedidos</PageTitle>
@@ -16,41 +17,81 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>📝 Histórico de Pedidos</h1>
-        <button class="btn btn-warning" @onclick="AbrirModal">Novo Pedido</button>
+        <div class="d-flex gap-2">
+            <div class="input-group" style="max-width: 300px;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control border-start-0" placeholder="Buscar por tipo..."
+                       @bind="termoBusca" @bind:event="oninput" />
+            </div>
+            <button class="btn btn-warning" @onclick="AbrirModal">
+                <i class="bi bi-plus-circle"></i> Novo Pedido
+            </button>
+        </div>
     </div>
 
     @if (pedidos == null)
     {
-        <p>Carregando...</p>
+        <div class="text-center mt-5">
+            <div class="spinner-border text-warning" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-2 text-muted">Carregando histórico...</p>
+        </div>
+    }
+    else if (!PedidosFiltrados.Any())
+    {
+        <div class="alert alert-light shadow-sm border-0">
+            <i class="bi bi-info-circle me-2"></i>
+            @(string.IsNullOrWhiteSpace(termoBusca) ? "Nenhum pedido registrado." : $"Nenhum pedido encontrado para '{termoBusca}'.")
+        </div>
     }
     else
     {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Data</th>
-                    <th>Tipo</th>
-                    <th>Valor Total</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var p in pedidos)
-                {
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
                     <tr>
-                        <td>#@p.Id</td>
-                        <td>@p.Data.ToShortDateString()</td>
-                        <td><span class="badge bg-secondary">@p.Tipo</span></td>
-                        <td>R$ @p.ValorTotal.ToString("F2")</td>
-                        <td>
-                            <button class="btn btn-outline-warning btn-sm me-2" @onclick="() => AbrirModalEdicao(p)">Editar</button>
-                            <button class="btn btn-danger btn-sm" @onclick="() => DeletarAsync(p.Id, p.Tipo)">Cancelar</button>
-                        </td>
+                        <th>ID</th>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>Tipo</th>
+                        <th>Valor Total</th>
+                        <th class="text-end px-4">Ações</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="bg-white">
+                    @foreach (var p in PedidosFiltrados)
+                    {
+                        <tr>
+                            <td>#@p.Id</td>
+                            <td>@p.Data.ToShortDateString()</td>
+                            <td>
+                                <span class="badge bg-light text-dark border cursor-help" 
+                                      title="Cliente: @(p.Cliente?.Nome ?? "Carregando...")">
+                                    <i class="bi bi-person me-1"></i> ID: @p.ClienteId
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge @(p.Tipo == "Venda" ? "bg-success" : p.Tipo == "Compra" ? "bg-danger" : "bg-secondary")">
+                                    @p.Tipo
+                                </span>
+                            </td>
+                            <td class="fw-bold @(p.Tipo == "Venda" ? "text-success" : p.Tipo == "Compra" ? "text-danger" : "")">
+                                @(p.Tipo == "Compra" ? "-" : "+") R$ @p.ValorTotal.ToString("F2")
+                            </td>
+                            <td class="text-end px-4">
+                                <button class="btn btn-outline-warning btn-sm border-0 me-2" @onclick="() => AbrirModalEdicao(p)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm border-0" @onclick="() => DeletarAsync(p.Id, p.Tipo)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
 </div>
 
@@ -68,7 +109,11 @@
                     <div class="modal-body p-4">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Tipo de Pedido</label>
-                            <InputText @bind-Value="novoPedido.Tipo" class="form-control" placeholder="Ex: Venda" required />
+                            <InputSelect @bind-Value="novoPedido.Tipo" class="form-select" required>
+                                <option value="">Selecione...</option>
+                                <option value="Venda">Venda (Entrada)</option>
+                                <option value="Compra">Compra (Saída)</option>
+                            </InputSelect>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Descrição</label>
@@ -80,12 +125,29 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">ID do Cliente</label>
-                            <InputNumber @bind-Value="novoPedido.ClienteId" class="form-control" required />
+                            <div class="input-group">
+                                <InputNumber @bind-Value="novoPedido.ClienteId" class="form-control" placeholder="0" required readonly />
+                                <button class="btn btn-outline-secondary" type="button" @onclick="AbrirSelecaoCliente">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                            @if (clienteSelecionado != null)
+                            {
+                                <div class="form-text text-primary fw-bold">
+                                    <i class="bi bi-person-check"></i> @clienteSelecionado.Nome
+                                </div>
+                            }
+                            else if (novoPedido.ClienteId > 0)
+                            {
+                                <div class="form-text text-danger">Cliente não encontrado.</div>
+                            }
                         </div>
                     </div>
                     <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
-                        <button type="submit" class="btn btn-warning px-4">@(novoPedido.Id == 0 ? "Salvar Pedido" : "Salvar Alterações")</button>
+                        <button type="submit" class="btn btn-warning px-4" disabled="@(clienteSelecionado == null)">
+                            @(novoPedido.Id == 0 ? "Salvar Pedido" : "Salvar Alterações")
+                        </button>
                     </div>
                 </EditForm>
             </div>
@@ -93,21 +155,70 @@
     </div>
 }
 
+@* Modal de Seleção de Cliente *@
+@if (exibirSelecaoCliente)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-secondary text-white">
+                    <h6 class="modal-title">Selecionar Cliente</h6>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharSelecaoCliente"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <input type="text" class="form-control form-control-sm mb-3" placeholder="Filtrar por nome..."
+                           @bind="termoBuscaCliente" @bind:event="oninput" />
+                    
+                    <div class="list-group list-group-flush overflow-auto" style="max-height: 200px;">
+                        @foreach (var c in ClientesFiltradosParaSelecao)
+                        {
+                            <button type="button" class="list-group-item list-group-item-action py-2 small"
+                                    @onclick="() => SelecionarCliente(c)">
+                                <strong>#@c.Id</strong> - @c.Nome
+                            </button>
+                        }
+                        @if (!ClientesFiltradosParaSelecao.Any())
+                        {
+                            <div class="p-2 text-muted small">Nenhum cliente encontrado.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<Pedido>? pedidos;
+    private List<Cliente>? todosClientes;
+    private Cliente? clienteSelecionado;
 
     private Pedido novoPedido = new Pedido { Tipo = "" };
 
     private string termoBusca = "";
+    private string termoBuscaCliente = "";
 
     private bool exibirModal = false;
+    private bool exibirSelecaoCliente = false;
 
     private IEnumerable<Pedido> PedidosFiltrados =>
         pedidos.FiltrarPorTexto(termoBusca, p => p.Tipo);
 
-    protected override async Task OnInitializedAsync() => await ListarAsync();
+    private IEnumerable<Cliente> ClientesFiltradosParaSelecao =>
+        todosClientes.FiltrarPorTexto(termoBuscaCliente, c => c.Nome);
+
+    protected override async Task OnInitializedAsync() 
+    {
+        await ListarAsync();
+        await CarregarClientesAsync();
+    }
 
     // --- Métodos CRUD ---
+
+    private async Task CarregarClientesAsync()
+    {
+        todosClientes = await CrudExtensions.CarregarDadosSafeAsync(() => ClienteService.GetAllAsync(), "Clientes");
+    }
 
     private async Task ListarAsync()
     {
@@ -117,6 +228,12 @@
 
     private async Task SalvarAsync()
     {
+        if (novoPedido.ValorTotal <= 0)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "O valor do pedido deve ser maior que zero!");
+            return;
+        }
+
         bool sucesso;
 
         if (novoPedido.Id == 0)
@@ -152,6 +269,23 @@
             await ListarAsync();
     }
     
+    // --- Controle de UI ---
+
+    private void AbrirSelecaoCliente()
+    {
+        termoBuscaCliente = "";
+        exibirSelecaoCliente = true;
+    }
+
+    private void FecharSelecaoCliente() => exibirSelecaoCliente = false;
+
+    private void SelecionarCliente(Cliente cliente)
+    {
+        novoPedido.ClienteId = cliente.Id;
+        clienteSelecionado = cliente;
+        FecharSelecaoCliente();
+    }
+
     private void AbrirModal()
     {
         novoPedido = new Pedido
@@ -163,6 +297,7 @@
             ValorTotal = 0,
             ClienteId = 0
         }; 
+        clienteSelecionado = null;
         exibirModal = true;
     }
 
@@ -177,6 +312,10 @@
             ValorTotal = pedido.ValorTotal,
             ClienteId = pedido.ClienteId
         };
+        
+        // Tenta encontrar o cliente na lista carregada
+        clienteSelecionado = todosClientes?.FirstOrDefault(c => c.Id == pedido.ClienteId);
+        
         exibirModal = true;
     }
 

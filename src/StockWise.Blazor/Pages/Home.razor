@@ -12,7 +12,7 @@
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>🍉 Estoque do Seu Zé</h1>
+        <h1>🍉 Estoque</h1>
         <div class="d-flex gap-2">
             <div class="input-group" style="max-width: 300px;">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
@@ -52,16 +52,21 @@
                                 <h5 class="card-title text-success fw-bold">
                                     @(fruta.Nome?.ObterEmojiFruta() ?? "🍎") @fruta.Nome
                                 </h5>
+                                <span class="badge bg-light text-dark border small align-self-start">ID: @fruta.Id</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
                                 <span class="badge @(fruta.Quantidade < 5 ? "bg-danger" : "bg-success") rounded-pill">
                                     @fruta.Quantidade kg
                                 </span>
+                                <span class="text-muted small">Disponível</span>
                             </div>
                             <p class="card-text mt-2 text-muted">
                                 <strong>Preço:</strong> R$ @fruta.Preco.ToString("F2")
                             </p>
                         </div>
                         <div class="card-footer bg-transparent border-0 d-flex justify-content-end pb-3">
-                            <button class="btn btn-outline-warning btn-sm border-0 me-2" @onclick="() => AbrirModalEdicao(fruta)">
+                            <button class="btn btn-outline-warning btn-sm border-0 me-2"
+                                    @onclick="() => AbrirModalEdicao(fruta)">
                                 <i class="bi bi-pencil"></i> Editar
                             </button>
                             <button class="btn btn-outline-danger btn-sm border-0" @onclick="() => DeletarFruta(fruta.Nome!)">
@@ -89,8 +94,8 @@
                     <div class="modal-body p-4">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Nome da Fruta</label>
-                            <InputText @bind-Value="novaFruta.Nome" class="form-control" placeholder="Ex: Morango"
-                                       required disabled="@(novaFruta.Id != 0)" />
+                            <InputText @bind-Value="novaFruta.Nome" class="form-control" placeholder="Ex: Morango" required
+                                       disabled="@(novaFruta.Id != 0)" />
                             @if (novaFruta.Id != 0)
                             {
                                 <div class="form-text text-muted">O nome da fruta não pode ser alterado após o cadastro.</div>
