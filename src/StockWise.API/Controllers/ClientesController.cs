@@ -19,7 +19,19 @@ public class ClientesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Cliente>>> Get()
     {
-        return await _context.Clientes.ToListAsync();
+        var counts = await _context.Pedidos
+            .GroupBy(p => p.ClienteId)
+            .Select(g => new { ClienteId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.ClienteId, x => x.Count);
+
+        var clientes = await _context.Clientes.ToListAsync();
+
+        foreach (var c in clientes)
+        {
+            c.QuantidadePedidos = counts.TryGetValue(c.Id, out int count) ? count : 0;
+        }
+
+        return clientes;
     }
 
     [HttpPost]

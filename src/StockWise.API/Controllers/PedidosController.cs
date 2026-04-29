@@ -34,10 +34,6 @@ public class PedidosController : ControllerBase
         pedido.Data = DateTime.SpecifyKind(pedido.Data, DateTimeKind.Utc);
         _context.Pedidos.Add(pedido);
 
-        // Incrementa contador do cliente
-        var cliente = await _context.Clientes.FindAsync(pedido.ClienteId);
-        if (cliente != null) cliente.QuantidadePedidos++;
-
         await _context.SaveChangesAsync();
         return Ok(pedido);
     }
@@ -47,10 +43,6 @@ public class PedidosController : ControllerBase
     {
         var pedido = await _context.Pedidos.FindAsync(id);
         if (pedido == null) return NotFound();
-
-        // Decrementa contador do cliente
-        var cliente = await _context.Clientes.FindAsync(pedido.ClienteId);
-        if (cliente != null && cliente.QuantidadePedidos > 0) cliente.QuantidadePedidos--;
 
         _context.Pedidos.Remove(pedido);
         await _context.SaveChangesAsync();

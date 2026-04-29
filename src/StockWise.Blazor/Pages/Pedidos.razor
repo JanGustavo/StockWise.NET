@@ -62,6 +62,7 @@
                         <th>Data</th>
                         <th>Cliente</th>
                         <th>Tipo</th>
+                        <th>Descrição</th>
                         <th>Valor Total</th>
                         <th class="text-end">Ações</th>
                     </tr>
@@ -74,7 +75,8 @@
                             <td class="order-date">@p.Data.ToShortDateString()</td>
                             <td>
                                 <div class="d-flex align-items-center gap-2" title="ID do Cliente: @p.ClienteId">
-                                    <div style="width: 32px; height: 32px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                                    <div
+                                        style="width: 32px; height: 32px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
                                         👤
                                     </div>
                                     <div class="d-flex flex-column">
@@ -85,18 +87,26 @@
                             </td>
                             <td>
                                 <span class="type-badge @(p.Tipo == "Venda" ? "type-venda" : "type-compra")">
-                                    <i class="bi @(p.Tipo == "Venda" ? "bi-arrow-up-circle-fill" : "bi-arrow-down-circle-fill")"></i>
+                                    <i
+                                    class="bi @(p.Tipo == "Venda" ? "bi-arrow-up-circle-fill" : "bi-arrow-down-circle-fill")"></i>
                                     @(p.Tipo == "Venda" ? "Venda" : "Despesa")
                                 </span>
                             </td>
+                            
+                            <td>
+                                @(string.IsNullOrWhiteSpace(p.Descricao) ? "-" : p.Descricao)
+                            </td>
+
                             <td class="@(p.Tipo == "Venda" ? "value-venda" : "value-compra")">
                                 @(p.Tipo == "Compra" ? "-" : "+") R$ @p.ValorTotal.ToString("F2")
                             </td>
                             <td class="text-end">
-                                <button class="btn-action-sm btn-edit-sm me-2" @onclick="() => AbrirModalEdicao(p)" title="Editar">
+                                <button class="btn-action-sm btn-edit-sm me-2" @onclick="() => AbrirModalEdicao(p)"
+                                        title="Editar">
                                     <i class="bi bi-pencil-fill"></i>
                                 </button>
-                                <button class="btn-action-sm btn-delete-sm" @onclick="() => DeletarAsync(p.Id, p.Tipo)" title="Excluir">
+                                <button class="btn-action-sm btn-delete-sm" @onclick="() => DeletarAsync(p.Id, p.Tipo)"
+                                        title="Excluir">
                                     <i class="bi bi-trash-fill"></i>
                                 </button>
                             </td>
@@ -135,14 +145,17 @@
                     
                     <div class="form-group">
                         <label class="form-label">Descrição / Observações</label>
-                        <InputText @bind-Value="novoPedido.Descricao" class="form-input" placeholder="Ex: Venda de 10kg de Morango" />
+                        <InputText @bind-Value="novoPedido.Descricao" class="form-input"
+                                   placeholder="Ex: Venda de 10kg de Morango" />
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Valor Total (R$)</label>
                         <div class="position-relative">
-                            <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--text-secondary);">R$</span>
-                            <InputNumber @bind-Value="novoPedido.ValorTotal" class="form-input" style="padding-left: 3rem;" step="0.01" required />
+                            <span
+                            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--text-secondary);">R$</span>
+                            <InputNumber @bind-Value="novoPedido.ValorTotal" class="form-input" style="padding-left: 3rem;"
+                                         step="0.01" required />
                         </div>
                     </div>
 
@@ -150,10 +163,13 @@
                         <label class="form-label">Vincular Cliente</label>
                         <div class="client-selector">
                             <div class="position-relative flex-grow-1">
-                                <i class="bi bi-person" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
-                                <InputNumber @bind-Value="novoPedido.ClienteId" class="form-input" style="padding-left: 2.5rem;" placeholder="ID do Cliente" required readonly />
+                                <i class="bi bi-person"
+                                   style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                                <InputNumber @bind-Value="novoPedido.ClienteId" class="form-input"
+                                             style="padding-left: 2.5rem;" placeholder="ID do Cliente" required readonly />
                             </div>
-                            <button class="btn-modal" type="button" style="background: #f1f5f9; padding: 0 1.25rem;" @onclick="AbrirSelecaoCliente">
+                            <button class="btn-modal" type="button" style="background: #f1f5f9; padding: 0 1.25rem;"
+                                    @onclick="AbrirSelecaoCliente">
                                 <i class="bi bi-search"></i>
                             </button>
                         </div>
@@ -195,9 +211,10 @@
             </div>
             <div class="p-3 border-bottom">
                 <div class="position-relative">
-                    <i class="bi bi-filter" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
-                    <input type="text" class="form-control form-control-sm" style="padding-left: 2rem; border-radius: 8px;" placeholder="Filtrar clientes..."
-                           @bind="termoBuscaCliente" @bind:event="oninput" />
+                    <i class="bi bi-filter"
+                       style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                    <input type="text" class="form-control form-control-sm" style="padding-left: 2rem; border-radius: 8px;"
+                           placeholder="Filtrar clientes..." @bind="termoBuscaCliente" @bind:event="oninput" />
                 </div>
             </div>
             <div class="picker-body">
@@ -231,8 +248,8 @@
     private bool exibirSelecaoCliente = false;
 
     private IEnumerable<Pedido> PedidosFiltrados =>
-        pedidos?.Where(p => 
-            string.IsNullOrWhiteSpace(termoBusca) || 
+        pedidos?.Where(p =>
+            string.IsNullOrWhiteSpace(termoBusca) ||
             p.Tipo.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) ||
             p.Id.ToString().Contains(termoBusca) ||
             p.ClienteId.ToString().Contains(termoBusca) ||
@@ -242,7 +259,7 @@
     private IEnumerable<Cliente> ClientesFiltradosParaSelecao =>
         todosClientes.FiltrarPorTexto(termoBuscaCliente, c => c.Nome);
 
-    protected override async Task OnInitializedAsync() 
+    protected override async Task OnInitializedAsync()
     {
         await ListarAsync();
         await CarregarClientesAsync();
@@ -316,7 +333,7 @@
             Descricao = "",
             ValorTotal = 0,
             ClienteId = 0
-        }; 
+        };
         clienteSelecionado = null;
         exibirModal = true;
     }

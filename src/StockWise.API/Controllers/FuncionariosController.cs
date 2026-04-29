@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StockWise.Domain.Entities;
 using StockWise.Infrastructure.Persistence;
+using BCrypt.Net;
 
 namespace StockWise.API.Controllers;
 
@@ -26,6 +27,10 @@ public class FuncionariosController : ControllerBase
     public async Task<ActionResult<Funcionario>> Post(Funcionario funcionario)
     {
         funcionario.DataCadastro = DateTime.SpecifyKind(funcionario.DataCadastro, DateTimeKind.Utc);
+        
+        // Hash da senha antes de salvar
+        funcionario.Senha = BCrypt.Net.BCrypt.HashPassword(funcionario.Senha);
+        
         _context.Funcionarios.Add(funcionario);
         await _context.SaveChangesAsync();
         return Ok(funcionario);
@@ -46,6 +51,16 @@ public class FuncionariosController : ControllerBase
     public async Task<ActionResult> Put(int id, Funcionario funcionario)
     {
         if (id != funcionario.Id) return BadRequest();
+
+        var funcionarioExistente = await _context.Funcionarios.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id);
+        if (funcionarioExistente == null) return NotFound();
+
+        // Se a senha enviada for diferente da senha atual no banco, fazemos o hash
+        // Nota: Em um sistema real, você teria uma lógica mais refinada para saber se o usuário quer trocar a senha.
+        if (funcionario.Senha != funcionarioExistente.Senha)
+        {
+            funcionario.Senha = BCrypt.Net.BCrypt.HashPassword(funcionario.Senha);
+        }
 
         funcionario.DataCadastro = DateTime.SpecifyKind(funcionario.DataCadastro, DateTimeKind.Utc);
         _context.Entry(funcionario).State = EntityState.Modified;
