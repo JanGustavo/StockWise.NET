@@ -1,167 +1,211 @@
-# StockWise.NET
+# 📦 StockWise.NET
 
-## Visão Geral do Projeto
+## 🎯 Visão Geral do Projeto
 
-O **StockWise.NET** é uma aplicação de console robusta e eficiente, desenvolvida em C# com .NET 9, projetada para demonstrar um sistema completo de controle de estoque. Este projeto foca na implementação de operações CRUD (Create, Read, Update, Delete) para produtos (representados como 'Frutas' no contexto atual) e na gestão de pedidos, incluindo vendas e reposições. Utilizando o Entity Framework Core para persistência de dados em PostgreSQL, o StockWise.NET exemplifica boas práticas de desenvolvimento de software, como arquitetura em camadas, injeção de dependência e tratamento de exceções customizadas.
+O **StockWise.NET** é um sistema abrangente de gestão empresarial e controle de estoque, desenvolvido para demonstrar proficiência no desenvolvimento **Fullstack** utilizando o ecossistema **C#**. O projeto evoluiu de um MVP (Produto Mínimo Viável) para uma aplicação distribuída, com uma clara separação entre o **Backend (API RESTful)** e o **Frontend (Blazor WebAssembly)**.
 
-Este projeto é ideal para desenvolvedores que buscam um exemplo prático de aplicação .NET com interação com banco de dados relacional, servindo como um excelente portfólio para demonstrar habilidades em desenvolvimento backend.
+Para a persistência de dados, o sistema emprega o **Entity Framework Core** em conjunto com o **PostgreSQL**. A arquitetura do projeto adere a princípios sólidos de engenharia de software, incluindo:
 
-## Funcionalidades Principais
+*   **Arquitetura em Camadas (Clean Architecture)**: Promove o desacoplamento e a manutenibilidade.
+*   **Injeção de Dependência**: Facilita a testabilidade e a flexibilidade do código.
+*   **Documentação OpenAPI**: Garante uma interface de API bem definida e de fácil consumo.
+*   **Segurança com BCrypt**: Protege as informações sensíveis dos usuários.
 
-*   **Gestão Completa de Produtos (CRUD):** Permite cadastrar, listar, atualizar e deletar produtos do estoque.
-*   **Controle de Pedidos:** Gerencia o fluxo de pedidos, diferenciando entre vendas e reposições de estoque.
-*   **Persistência de Dados:** Armazenamento seguro e eficiente de informações em um banco de dados PostgreSQL.
-*   **Interface de Console Interativa:** Menu intuitivo para facilitar a interação do usuário com o sistema.
-*   **Tratamento de Exceções:** Implementação de exceções customizadas para uma gestão de erros mais robusta e clara.
-*   **Injeção de Dependência:** Utilização de injeção de dependência para promover a modularidade e testabilidade do código.
-*   **Integração Contínua (CI):** Configuração de GitHub Actions para automação de builds e testes.
+Este repositório serve como um artefato de portfólio prático, destacando a capacidade de construir e escalar uma aplicação desde a concepção até um ambiente **Production-Ready**.
 
-## Tecnologias Utilizadas
+## ✨ Funcionalidades Principais
 
-O projeto StockWise.NET foi construído com as seguintes tecnologias:
+O StockWise.NET oferece um conjunto robusto de funcionalidades para a gestão eficiente de negócios:
 
-*   **C#:** Linguagem de programação principal.
-*   **.NET 9:** Framework de desenvolvimento.
-*   **Entity Framework Core (9.0.10):** ORM (Object-Relational Mapper) para interação com o banco de dados.
-*   **Npgsql.EntityFrameworkCore.PostgreSQL (9.0.4):** Provedor PostgreSQL para Entity Framework Core.
-*   **Microsoft.Extensions.DependencyInjection (9.0.10):** Biblioteca para injeção de dependência.
-*   **Microsoft.Extensions.Configuration (9.0.10):** Para gerenciamento de configurações.
-*   **Microsoft.Extensions.Configuration.Json (9.0.10):** Para carregar configurações de arquivos JSON.
-*   **Microsoft.Extensions.Configuration.UserSecrets (9.0.10):** Para gerenciar segredos de usuário durante o desenvolvimento.
-*   **PostgreSQL:** Sistema de gerenciamento de banco de dados relacional.
-*   **GitHub Actions:** Para automação de CI/CD.
+### 📊 Gestão de Estoque e Vendas (CRUD)
 
-## Arquitetura do Projeto
+Administração completa de produtos (ex: Frutas), permitindo o controle detalhado de:
 
-O projeto segue uma arquitetura em camadas, promovendo a separação de responsabilidades e facilitando a manutenção e escalabilidade. As principais camadas incluem:
+*   **Entradas e Saídas**: Registro de movimentações de estoque.
+*   **Preços**: Definição e atualização de valores de venda.
+*   **Quantidades**: Monitoramento do nível de estoque.
 
-*   `Data/`: Contém o `AppDbContext`, responsável pela configuração do Entity Framework Core e pela interação com o banco de dados.
-*   `Models/`: Define as classes de modelo (`Fruta`, `ItemPedido`, `Pedido`) que representam as entidades do domínio da aplicação.
-*   `Repositories/`: Contém as interfaces e implementações dos repositórios, abstraindo a lógica de acesso a dados.
-*   `Services/`: Abriga a lógica de negócio da aplicação, orquestrando as operações e utilizando os repositórios.
-*   `Exceptions/`: Define exceções customizadas para tratar cenários específicos da aplicação de forma controlada.
-*   `Program.cs`: O ponto de entrada da aplicação, responsável pela configuração da injeção de dependência, inicialização do banco de dados e apresentação do menu interativo ao usuário.
+### 💰 Controle Financeiro de Pedidos
 
-## Como Executar o Projeto
+Registro e gerenciamento de transações, incluindo:
 
-Para configurar e executar o StockWise.NET em sua máquina local, siga os passos abaixo:
+*   **Cálculo de Valor Total**: Automatização do somatório dos itens do pedido.
+*   **Classificação de Transações**: Diferenciação entre Vendas (entrada) e Compras/Despesas (saída).
 
-### Pré-requisitos
+### 👥 Gestão de Clientes e Funcionários
 
-*   [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-*   [PostgreSQL 12+](https://www.postgresql.org/download/)
+Funcionalidades para gerenciar os principais stakeholders do negócio:
 
-### Configuração de Variáveis de Ambiente
+*   **Relacionamentos Complexos**: Estrutura de banco de dados para gerenciar interações entre clientes e funcionários.
+*   **Rastreamento de Compras**: Monitoramento do volume de compras por cliente.
+*   **Gestão de Cargos e Salários**: Administração da estrutura organizacional e remuneração.
 
-1. **Copie o arquivo de exemplo:**
-   ```bash
-   cp .env.example .env
-   ```
+### 🔐 Segurança e Criptografia
 
-2. **Edite o arquivo `.env` com suas credenciais do PostgreSQL:**
-   ```env
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_NAME=frutas_db
-   DB_USER=postgres
-   DB_PASSWORD=sua_senha_aqui
-   ```
+Implementação de medidas de segurança robustas:
 
-   ⚠️ **Importante:** O arquivo `.env` está no `.gitignore` e nunca será enviado ao repositório, protegendo suas credenciais.
+*   **Hash de Senhas**: Utilização do **BCrypt.Net-Next** para armazenamento seguro de credenciais.
 
-### Passos de Instalação
+### 🌐 Frontend SPA Responsivo
 
-1. **Clone o repositório:**
-   ```bash
-   git clone https://github.com/seu-usuario/stockwise-net.git
-   cd StockWise.NET
-   ```
+Uma interface de usuário moderna e interativa:
 
-2. **Configure o banco de dados:**
-   ```bash
-   # Certifique-se de que o PostgreSQL está rodando e crie o banco de dados
-   psql -U postgres -c "CREATE DATABASE frutas_db;"
-   ```
+*   **Blazor WebAssembly**: Desenvolvimento de uma Single Page Application (SPA) responsiva.
+*   **Consumo Assíncrono da API**: Interação eficiente com o backend para uma experiência de usuário fluida.
 
-3. **Configure as variáveis de ambiente:**
-   ```bash
-   cp .env.example .env
-   # Edite o .env com suas credenciais
-   ```
+### ⚙️ Configuração Segura
 
-4. **Restaure as dependências:**
-   ```bash
-   dotnet restore
-   ```
+Gerenciamento de configurações sensíveis:
 
-5. **Execute as migrations:**
-   ```bash
-   dotnet ef database update
-   ```
+*   **DotNetEnv**: Utilização para carregar variáveis de ambiente de forma segura.
+*   **Variáveis Isoladas**: Armazenamento de configurações em arquivos `.env` para isolamento e segurança.
 
-6. **Execute a aplicação:**
-   ```bash
-   dotnet run
-   ```
+## 🛠️ Tecnologias Utilizadas
 
-## Variáveis de Ambiente
+O projeto StockWise.NET é construído com as seguintes tecnologias:
 
-O projeto utiliza variáveis de ambiente para configurar a conexão com o PostgreSQL. As seguintes variáveis são suportadas:
+### Backend e Dados
 
-| Variável | Descrição | Padrão |
-|----------|-----------|---------|
-| `DB_HOST` | Host do servidor PostgreSQL | `localhost` |
-| `DB_PORT` | Porta do PostgreSQL | `5432` |
-| `DB_NAME` | Nome do banco de dados | `frutas_db` |
-| `DB_USER` | Usuário do PostgreSQL | `postgres` |
-| `DB_PASSWORD` | Senha do PostgreSQL | (vazio) |
+*   **C# / .NET 10**: Linguagem e framework principal para o desenvolvimento backend.
+*   **Entity Framework Core (ORM)**: Ferramenta para mapeamento objeto-relacional.
+*   **Npgsql (PostgreSQL)**: Provedor de dados para interação com o banco de dados PostgreSQL.
+*   **BCrypt.Net-Next**: Biblioteca para hashing de senhas.
+*   **DotNetEnv**: Gerenciamento de variáveis de ambiente.
 
-As variáveis são carregadas do arquivo `.env` automaticamente ao iniciar a aplicação.
+### Frontend
 
-### Estrutura do Projeto
-*   [PostgreSQL](https://www.postgresql.org/download/)
-*   Um editor de código como [Visual Studio](https://visualstudio.microsoft.com/vs/) ou [VS Code](https://code.visualstudio.com/)
+*   **Blazor WebAssembly**: Framework para construção de SPAs com C#.
+*   **HTML5 / CSS3 / Bootstrap**: Tecnologias padrão para estruturação, estilização e responsividade da interface.
 
-### Configuração
+## 🏗️ Arquitetura do Projeto
 
-1.  **Clone o repositório:**
+A solução StockWise.NET é organizada em múltiplos projetos para garantir um alto nível de desacoplamento e modularidade, seguindo os princípios da Clean Architecture.
+
+```
+src/
+├── StockWise.API/             # Backend (REST API + Swagger)
+├── StockWise.Blazor/          # Frontend SPA
+├── StockWise.Application/     # Regras de negócio (Services)
+├── StockWise.Domain/          # Entidades e interfaces
+└── StockWise.Infrastructure/  # Banco de dados e repositórios
+```
+
+### 📂 Descrição dos Módulos
+
+*   **StockWise.API**: Atua como o ponto de entrada da aplicação, expondo os endpoints RESTful, configurando o Swagger para documentação e gerenciando a Injeção de Dependência.
+
+*   **StockWise.Blazor**: Contém a interface do usuário (SPA), responsável pela interação com o usuário e consumo da API.
+
+*   **StockWise.Application**: Abriga a lógica de negócio principal e as regras de validação, orquestrando as operações do sistema.
+
+*   **StockWise.Domain**: O núcleo do sistema, definindo as entidades (como Fruta, Pedido, Cliente, Funcionário), interfaces e exceções de domínio.
+
+*   **StockWise.Infrastructure**: Responsável pela integração com o banco de dados, contendo o DbContext e as implementações concretas dos repositórios.
+
+## 🚀 Como Executar o Projeto
+
+Para configurar e executar o projeto StockWise.NET localmente, siga os passos abaixo:
+
+### 📌 Pré-requisitos
+
+Certifique-se de ter os seguintes softwares instalados:
+
+*   **.NET 10 SDK**
+*   **PostgreSQL 12+** (pode ser instalado localmente ou via Docker)
+
+### 1. Clonar o Repositório
+
+```bash
+git clone https://github.com/JanGustavo/StockWise.NET.git
+cd StockWise.NET
+```
+
+### 2. Configurar o Banco de Dados
+
+Crie um arquivo `.env` na raiz do projeto a partir do exemplo fornecido:
+
+```bash
+cp .env.example .env
+```
+
+Edite o arquivo `.env` com suas credenciais e configurações do PostgreSQL:
+
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=frutas_db
+DB_USER=postgres
+DB_PASSWORD=sua_senha_secreta
+```
+
+Crie o banco de dados no PostgreSQL (substitua `frutas_db` pelo nome configurado no `.env`):
+
+```bash
+psql -U postgres -c "CREATE DATABASE frutas_db;"
+```
+
+### 3. Aplicar Migrations
+
+Navegue até a raiz do projeto e execute os comandos para restaurar as dependências e aplicar as migrações do banco de dados:
+
+```bash
+dotnet restore
+dotnet ef database update \
+  --project src/StockWise.Infrastructure \
+  --startup-project src/StockWise.API
+```
+
+### 4. Rodar a Aplicação
+
+#### Backend (API)
+
+Navegue até o diretório da API e inicie o servidor:
+
+```bash
+cd src/StockWise.API
+dotnet run
+```
+
+A documentação da API estará disponível via Swagger em:
+
+```
+http://localhost:<porta>/openapi/v1.json
+```
+
+#### Frontend (Blazor)
+
+Navegue até o diretório do Blazor e inicie a aplicação frontend:
+
+```bash
+cd src/StockWise.Blazor
+dotnet run
+```
+
+Abra a URL exibida no terminal em seu navegador para acessar a interface do usuário.
+
+## 🤝 Contribuição
+
+Contribuições são bem-vindas! Para contribuir com o projeto, siga os passos:
+
+1.  Faça um fork do repositório.
+2.  Crie uma nova branch para sua funcionalidade ou correção:
     ```bash
-    git clone https://github.com/JanGustavo/StockWise.NET.git
-    cd StockWise.NET
+    git checkout -b feature/NovaFuncionalidade
     ```
-
-2.  **Configure o Banco de Dados:**
-    *   Crie um banco de dados PostgreSQL. Você pode usar um cliente como `pgAdmin` ou a linha de comando `psql`.
-    *   Atualize a string de conexão no arquivo `appsettings.json` (ou `appsettings.Development.json` para desenvolvimento) com as credenciais do seu banco de dados PostgreSQL. Exemplo:
-        ```json
-        {
-          "ConnectionStrings": {
-            "DefaultConnection": "Host=localhost;Port=5432;Database=StockWiseDb;Username=your_username;Password=your_password"
-          }
-        }
-        ```
-
-3.  **Aplique as Migrações do Entity Framework Core:**
-    Navegue até o diretório do projeto (`StockWise.NET`) no terminal e execute os seguintes comandos para criar o esquema do banco de dados:
+3.  Realize suas alterações e faça commits com mensagens claras:
     ```bash
-    dotnet ef database update
+    git commit -m "feat: Adiciona nova funcionalidade X"
     ```
-
-4.  **Execute a Aplicação:**
+4.  Envie suas alterações para o seu fork:
     ```bash
-    dotnet run
+    git push origin feature/NovaFuncionalidade
     ```
+5.  Abra um Pull Request para o repositório original.
 
-    A aplicação de console será iniciada, apresentando um menu interativo para você começar a gerenciar o estoque.
+## 📄 Licença
 
-## Contribuição
+Este projeto está licenciado sob a **Licença MIT**. Consulte o arquivo `LICENSE` na raiz do repositório para mais detalhes.
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir *issues* para relatar bugs ou sugerir melhorias, e enviar *pull requests* com novas funcionalidades ou correções.
+## 👨‍💻 Autor
 
-## Licença
-
-Este projeto está licenciado sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
-
----
-
-**Desenvolvido por:** Janderson Gustavo
+Desenvolvido por **Janderson Gustavo**
