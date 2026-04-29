@@ -10,80 +10,504 @@
 
 <PageTitle>StockWise - Clientes</PageTitle>
 
-<div class="container mt-4">
-    @* Cabeçalho e Busca *@
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>👥 Clientes do Seu Zé</h1>
-        <div class="d-flex gap-2">
-            <div class="input-group" style="max-width: 300px;">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control border-start-0" placeholder="Buscar cliente..."
-                       @bind="termoBusca" @bind:event="oninput" />
+<style>
+    /* ==================== VARIÁVEIS E RESET ==================== */
+    :root {
+        --primary-color: #3b82f6; /* Azul para Clientes */
+        --primary-dark: #1d4ed8;
+        --primary-light: #93c5fd;
+        --secondary-color: #f59e0b;
+        --danger-color: #ef4444;
+        --dark-bg: #0f172a;
+        --card-bg: #ffffff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --border-color: #e2e8f0;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+        --shadow-xl: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+        --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        color: var(--text-primary);
+        min-height: 100vh;
+    }
+
+    /* ==================== HEADER ==================== */
+    .header-container {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        padding: 2rem 0;
+        box-shadow: var(--shadow-lg);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .header-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 500px;
+        height: 500px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @@keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .header-title {
+        color: white;
+        font-size: 2.5rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        animation: slideInLeft 0.6s ease-out;
+    }
+
+    .header-title span {
+        display: inline-block;
+        animation: bounce 2s ease-in-out infinite;
+    }
+
+    @@keyframes slideInLeft {
+        from { opacity: 0; transform: translateX(-30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    @@keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        animation: slideInRight 0.6s ease-out;
+    }
+
+    @@keyframes slideInRight {
+        from { opacity: 0; transform: translateX(30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ==================== SEARCH BAR ==================== */
+    .search-container {
+        position: relative;
+        flex: 1;
+        max-width: 350px;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 50px;
+        padding: 0.5rem 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all var(--transition-base);
+    }
+
+    .search-input-wrapper:focus-within {
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .search-input-wrapper i {
+        color: var(--primary-color);
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+    }
+
+    .search-input-wrapper input {
+        border: none;
+        background: transparent;
+        outline: none;
+        flex: 1;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    /* ==================== BUTTONS ==================== */
+    .btn-primary-custom {
+        background: linear-gradient(135deg, var(--secondary-color) 0%, #f97316 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all var(--transition-base);
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+    }
+
+    /* ==================== CONTAINER ==================== */
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+    }
+
+    /* ==================== EMPTY & LOADING ==================== */
+    .loading-container, .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--shadow-md);
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .spinner-custom {
+        width: 50px;
+        height: 50px;
+        border: 4px solid var(--border-color);
+        border-top-color: var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin { to { transform: rotate(360deg); } }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==================== CLIENT CARDS GRID ==================== */
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .client-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+        transition: all var(--transition-base);
+        position: relative;
+        border: 2px solid transparent;
+        animation: cardEnter 0.5s ease-out backwards;
+    }
+
+    @@keyframes cardEnter {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .client-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--primary-light);
+    }
+
+    .client-card-header {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 197, 253, 0.05) 100%);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .client-avatar {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+    }
+
+    .client-info-header {
+        flex: 1;
+    }
+
+    .client-name {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .client-id {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .client-card-body {
+        padding: 1.5rem;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .contact-item i {
+        color: var(--primary-color);
+        width: 20px;
+    }
+
+    .orders-section {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .orders-badge {
+        background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .client-card-footer {
+        padding: 1rem 1.5rem;
+        background: #f8fafc;
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    /* ==================== ACTION BUTTONS ==================== */
+    .btn-action {
+        flex: 1;
+        padding: 0.65rem 1rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all var(--transition-base);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+    }
+
+    .btn-edit { background: linear-gradient(135deg, var(--secondary-color) 0%, #fbbf24 100%); color: white; }
+    .btn-delete { background: linear-gradient(135deg, var(--danger-color) 0%, #f87171 100%); color: white; }
+    .btn-action:hover { transform: translateY(-2px); opacity: 0.9; }
+
+    /* ==================== MODAL ==================== */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--shadow-xl);
+        max-width: 500px;
+        width: 90%;
+        animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @@keyframes modalSlideIn {
+        from { opacity: 0; transform: scale(0.9) translateY(-50px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 20px 20px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-close-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.3s;
+    }
+
+    .modal-close-btn:hover { transform: rotate(90deg); background: rgba(255, 255, 255, 0.3); }
+
+    .modal-body { padding: 2rem; }
+    .form-group { margin-bottom: 1.5rem; }
+    .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+    .form-input {
+        width: 100%; padding: 0.85rem 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        transition: all 0.3s;
+    }
+    .form-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+
+    .modal-footer { padding: 1.5rem 2rem; background: #f1f5f9; border-radius: 0 0 20px 20px; display: flex; gap: 1rem; justify-content: flex-end; }
+    .btn-modal { padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; border: none; }
+    .btn-cancel { background: #cbd5e1; }
+    .btn-submit { background: var(--primary-color); color: white; min-width: 150px; }
+
+    @@media (max-width: 768px) {
+        .header-content { flex-direction: column; align-items: stretch; }
+        .header-actions { flex-direction: column; }
+        .search-container { max-width: 100%; }
+        .cards-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="header-container">
+    <div class="main-container">
+        <div class="header-content">
+            <h1 class="header-title">
+                <span>👥</span>
+                Clientes
+            </h1>
+            <div class="header-actions">
+                <div class="search-container">
+                    <div class="search-input-wrapper">
+                        <i class="bi bi-search"></i>
+                        <input type="text" placeholder="Buscar cliente..." @bind="termoBusca" @bind:event="oninput" />
+                    </div>
+                </div>
+                <button class="btn-primary-custom" @onclick="AbrirModal">
+                    <i class="bi bi-person-plus-fill"></i>
+                    Novo Cliente
+                </button>
             </div>
-            <button class="btn btn-primary" @onclick="AbrirModal">
-                <i class="bi bi-person-plus-fill"></i> Novo Cliente
-            </button>
         </div>
     </div>
+</div>
 
-    @* Estado de Carregamento *@
+<div class="main-container">
     @if (clientes == null)
     {
-        <div class="text-center mt-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Carregando...</span>
-            </div>
-            <p class="mt-2">Conectando à API...</p>
+        <div class="loading-container">
+            <div class="spinner-custom"></div>
+            <p class="mt-3 text-secondary fw-bold">Conectando à API...</p>
         </div>
     }
-    @* Lista Vazia *@
     else if (!ClientesFiltrados.Any())
     {
-        <div class="alert alert-info shadow-sm border-0">
-            <i class="bi bi-info-circle me-2"></i>
-            @(string.IsNullOrWhiteSpace(termoBusca) ? "Nenhum cliente cadastrado." : $"Nenhum cliente encontrado para '{termoBusca}'.")
+        <div class="empty-state">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🔍</div>
+            <p class="text-secondary fw-bold">
+                @(string.IsNullOrWhiteSpace(termoBusca) ? "Nenhum cliente cadastrado." : $"Nenhum cliente encontrado para '{termoBusca}'.")
+            </p>
         </div>
     }
-    @* Tabela de Dados *@
     else
     {
-        <div class="table-responsive shadow-sm rounded">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th style="width: 80px;">ID</th>
-                        <th>Nome</th>
-                        <th>Email</th>
-                        <th>Telefone</th>
-                        <th class="text-center">Qtd. Pedidos</th>
-                        <th class="text-end px-4">Ações</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white">
-                    @foreach (var c in ClientesFiltrados)
-                    {
-                        <tr>
-                            <td class="text-muted small">#@c.Id</td>
-                            <td class="fw-bold text-primary">@c.Nome</td>
-                            <td>@c.Email</td>
-                            <td>@c.NumeroTelefone</td>
-                            <td class="text-center">
-                                <span class="badge bg-secondary rounded-pill">@c.QuantidadePedidos</span>
-                            </td>
-                            <td class="text-end px-4">
-                                <button class="btn btn-outline-warning btn-sm border-0 me-2"
-                                        @onclick="() => AbrirModalEdicao(c)">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm border-0"
-                                        @onclick="() => DeletarAsync(c.Id, c.Nome)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="cards-grid">
+            @foreach (var c in ClientesFiltrados)
+            {
+                <div class="client-card">
+                    <div class="client-card-header">
+                        <div class="client-avatar">
+                            @c.Nome.Substring(0, 1).ToUpper()
+                        </div>
+                        <div class="client-info-header">
+                            <h5 class="client-name">@c.Nome</h5>
+                            <span class="client-id">#@c.Id</span>
+                        </div>
+                    </div>
+                    <div class="client-card-body">
+                        <div class="contact-item">
+                            <i class="bi bi-envelope-fill"></i>
+                            <span>@c.Email</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="bi bi-telephone-fill"></i>
+                            <span>@c.NumeroTelefone</span>
+                        </div>
+                        <div class="orders-section">
+                            <span class="text-secondary small fw-bold">ATIVIDADE</span>
+                            <div class="orders-badge">
+                                <i class="bi bi-cart-check-fill"></i>
+                                @c.QuantidadePedidos Pedidos
+                            </div>
+                        </div>
+                    </div>
+                    <div class="client-card-footer">
+                        <button class="btn-action btn-edit" @onclick="() => AbrirModalEdicao(c)">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        <button class="btn-action btn-delete" @onclick="() => DeletarAsync(c.Id, c.Nome)">
+                            <i class="bi bi-trash"></i> Remover
+                        </button>
+                    </div>
+                </div>
+            }
         </div>
     }
 </div>
@@ -91,37 +515,39 @@
 @* Modal de Cadastro *@
 @if (exibirModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">@(novoCliente.Id == 0 ? "👤 Novo Cliente" : "✏️ Editar Cliente")</h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModal"></button>
-                </div>
-                <EditForm Model="@novoCliente" OnValidSubmit="SalvarAsync">
-                    <div class="modal-body p-4">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Nome Completo</label>
-                            <InputText @bind-Value="novoCliente.Nome" class="form-control" placeholder="Ex: João Silva"
-                                       required />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Email</label>
-                            <InputText @bind-Value="novoCliente.Email" type="email" class="form-control"
-                                       placeholder="joao@email.com" required />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Telefone</label>
-                            <InputText @bind-Value="novoCliente.NumeroTelefone" class="form-control"
-                                       placeholder="(11) 99999-9999" required />
-                        </div>
-                    </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary px-4">@(novoCliente.Id == 0 ? "Cadastrar" : "Salvar Alterações")</button>
-                    </div>
-                </EditForm>
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi @(novoCliente.Id == 0 ? "bi-person-plus-fill" : "bi-pencil-square")"></i>
+                    @(novoCliente.Id == 0 ? "Novo Cliente" : "Editar Cliente")
+                </h5>
+                <button type="button" class="modal-close-btn" @onclick="FecharModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
+            <EditForm Model="@novoCliente" OnValidSubmit="SalvarAsync">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Nome Completo</label>
+                        <InputText @bind-Value="novoCliente.Nome" class="form-input" placeholder="Ex: João Silva" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <InputText @bind-Value="novoCliente.Email" type="email" class="form-input" placeholder="joao@email.com" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Telefone</label>
+                        <InputText @bind-Value="novoCliente.NumeroTelefone" class="form-input" placeholder="(11) 99999-9999" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal btn-cancel" @onclick="FecharModal">Cancelar</button>
+                    <button type="submit" class="btn-modal btn-submit">
+                        @(novoCliente.Id == 0 ? "Cadastrar Cliente" : "Salvar Alterações")
+                    </button>
+                </div>
+            </EditForm>
         </div>
     </div>
 }
@@ -132,13 +558,10 @@
     private string termoBusca = "";
     private bool exibirModal = false;
 
-    // Filtro reativo usando a extensão genérica
     private IEnumerable<Cliente> ClientesFiltrados =>
         clientes.FiltrarPorTexto(termoBusca, c => c.Nome);
 
     protected override async Task OnInitializedAsync() => await ListarAsync();
-
-    // --- Métodos CRUD ---
 
     private async Task ListarAsync()
     {
@@ -148,20 +571,13 @@
     private async Task SalvarAsync()
     {
         bool sucesso;
-
         if (novoCliente.Id == 0)
         {
-            sucesso = await CrudExtensions.SalvarSafeAsync(
-                () => ApiService.CreateAsync(novoCliente),
-                "Clientes"
-            );
+            sucesso = await CrudExtensions.SalvarSafeAsync(() => ApiService.CreateAsync(novoCliente), "Clientes");
         }
         else
         {
-            sucesso = await CrudExtensions.AtualizarSafeAsync(
-                () => ApiService.UpdateAsync(novoCliente),
-                "Clientes"
-            );
+            sucesso = await CrudExtensions.AtualizarSafeAsync(() => ApiService.UpdateAsync(novoCliente), "Clientes");
         }
 
         if (sucesso)
@@ -173,34 +589,15 @@
 
     private async Task DeletarAsync(int id, string nome)
     {
-        var confirmou = await JSRuntime.InvokeAsync<bool>(
-            "confirm",
-            $"Deseja realmente remover o cliente '{nome}'?"
-        );
-
-        if (!confirmou)
-            return;
-
-        var sucesso = await CrudExtensions.DeletarSafeAsync(
-            () => ApiService.DeleteAsync(id),
-            "Cliente"
-        );
-
-        if (sucesso)
-            await ListarAsync();
+        var confirmou = await JSRuntime.InvokeAsync<bool>("confirm", $"Deseja realmente remover o cliente '{nome}'?");
+        if (!confirmou) return;
+        var sucesso = await CrudExtensions.DeletarSafeAsync(() => ApiService.DeleteAsync(id), "Cliente");
+        if (sucesso) await ListarAsync();
     }
-
-    // --- Controle de UI ---
 
     private void AbrirModal()
     {
-        novoCliente = new Cliente
-        {
-            Id = 0,
-            Nome = "",
-            Email = "",
-            NumeroTelefone = ""
-        };
+        novoCliente = new Cliente { Id = 0, Nome = "", Email = "", NumeroTelefone = "" };
         exibirModal = true;
     }
 

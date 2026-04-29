@@ -1,5 +1,24 @@
-﻿@page "/not-found"
+@page "/not-found"
 @layout MainLayout
 
-<h3>Not Found</h3>
-<p>Sorry, the content you are looking for does not exist.</p>
+<PageTitle>StockWise - Página Não Encontrada</PageTitle>
+
+<div class="not-found-container">
+    <div class="floating-elements">
+        <span class="fruit-float" style="top: 10%; left: 10%; font-size: 3rem;">🍎</span>
+        <span class="fruit-float" style="top: 70%; left: 80%; font-size: 4rem; animation-delay: -5s;">🍉</span>
+        <span class="fruit-float" style="top: 40%; left: 30%; font-size: 2.5rem; animation-delay: -10s;">🍓</span>
+    </div>
+
+    <div class="error-illustration">🕵️‍♂️</div>
+    <div class="error-code">404</div>
+    <h3 class="error-title">Oops! Caminho sem saída.</h3>
+    <p class="error-message">
+        Parece que a fruta que você está procurando caiu do carrinho. O conteúdo que você tentou acessar não existe ou foi movido.
+    </p>
+    
+    <a href="/" class="btn-back-home">
+        <i class="bi bi-house-door-fill"></i>
+        Voltar para o Estoque
+    </a>
+</div>

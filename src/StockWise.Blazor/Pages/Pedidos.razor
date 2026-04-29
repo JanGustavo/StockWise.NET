@@ -6,85 +6,98 @@
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Forms
 
-
-
 @inject PedidoApiService ApiService
 @inject ClienteApiService ClienteService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>StockWise - Pedidos</PageTitle>
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>📝 Histórico de Pedidos</h1>
-        <div class="d-flex gap-2">
-            <div class="input-group" style="max-width: 300px;">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control border-start-0" placeholder="Buscar por tipo..."
-                       @bind="termoBusca" @bind:event="oninput" />
+<div class="header-container">
+    <div class="main-container">
+        <div class="header-content">
+            <h1 class="header-title">
+                <span>📝</span>
+                Pedidos
+            </h1>
+            <div class="header-actions">
+                <div class="search-container">
+                    <div class="search-input-wrapper">
+                        <i class="bi bi-search"></i>
+                        <input type="text" placeholder="Filtrar pedidos..." @bind="termoBusca" @bind:event="oninput" />
+                    </div>
+                </div>
+                <button class="btn-primary-custom" @onclick="AbrirModal">
+                    <i class="bi bi-plus-circle"></i>
+                    Novo Pedido
+                </button>
             </div>
-            <button class="btn btn-warning" @onclick="AbrirModal">
-                <i class="bi bi-plus-circle"></i> Novo Pedido
-            </button>
         </div>
     </div>
+</div>
 
+<div class="main-container">
     @if (pedidos == null)
     {
-        <div class="text-center mt-5">
-            <div class="spinner-border text-warning" role="status">
-                <span class="visually-hidden">Carregando...</span>
-            </div>
-            <p class="mt-2 text-muted">Carregando histórico...</p>
+        <div class="loading-container">
+            <div class="spinner-custom"></div>
+            <p class="mt-4 text-secondary fw-bold">Carregando histórico...</p>
         </div>
     }
     else if (!PedidosFiltrados.Any())
     {
-        <div class="alert alert-light shadow-sm border-0">
-            <i class="bi bi-info-circle me-2"></i>
-            @(string.IsNullOrWhiteSpace(termoBusca) ? "Nenhum pedido registrado." : $"Nenhum pedido encontrado para '{termoBusca}'.")
+        <div class="empty-state" style="text-align: center; padding: 5rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
+            <p class="text-secondary fw-bold">
+                @(string.IsNullOrWhiteSpace(termoBusca) ? "Nenhum pedido registrado." : $"Nenhum pedido encontrado para '{termoBusca}'.")
+            </p>
         </div>
     }
     else
     {
-        <div class="table-responsive shadow-sm rounded">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-dark">
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
                     <tr>
                         <th>ID</th>
                         <th>Data</th>
                         <th>Cliente</th>
                         <th>Tipo</th>
                         <th>Valor Total</th>
-                        <th class="text-end px-4">Ações</th>
+                        <th class="text-end">Ações</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white">
+                <tbody>
                     @foreach (var p in PedidosFiltrados)
                     {
                         <tr>
-                            <td>#@p.Id</td>
-                            <td>@p.Data.ToShortDateString()</td>
+                            <td class="order-id">#@p.Id</td>
+                            <td class="order-date">@p.Data.ToShortDateString()</td>
                             <td>
-                                <span class="badge bg-light text-dark border cursor-help" 
-                                      title="Cliente: @(p.Cliente?.Nome ?? "Carregando...")">
-                                    <i class="bi bi-person me-1"></i> ID: @p.ClienteId
-                                </span>
+                                <div class="d-flex align-items-center gap-2" title="ID do Cliente: @p.ClienteId">
+                                    <div style="width: 32px; height: 32px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                                        👤
+                                    </div>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold" style="font-size: 0.9rem;">@(p.Cliente?.Nome ?? "Cliente Externo")</span>
+                                        <span class="text-muted" style="font-size: 0.75rem;">ID: #@p.ClienteId</span>
+                                    </div>
+                                </div>
                             </td>
                             <td>
-                                <span class="badge @(p.Tipo == "Venda" ? "bg-success" : p.Tipo == "Compra" ? "bg-danger" : "bg-secondary")">
-                                    @p.Tipo
+                                <span class="type-badge @(p.Tipo == "Venda" ? "type-venda" : "type-compra")">
+                                    <i class="bi @(p.Tipo == "Venda" ? "bi-arrow-up-circle-fill" : "bi-arrow-down-circle-fill")"></i>
+                                    @(p.Tipo == "Venda" ? "Venda" : "Despesa")
                                 </span>
                             </td>
-                            <td class="fw-bold @(p.Tipo == "Venda" ? "text-success" : p.Tipo == "Compra" ? "text-danger" : "")">
+                            <td class="@(p.Tipo == "Venda" ? "value-venda" : "value-compra")">
                                 @(p.Tipo == "Compra" ? "-" : "+") R$ @p.ValorTotal.ToString("F2")
                             </td>
-                            <td class="text-end px-4">
-                                <button class="btn btn-outline-warning btn-sm border-0 me-2" @onclick="() => AbrirModalEdicao(p)">
-                                    <i class="bi bi-pencil"></i>
+                            <td class="text-end">
+                                <button class="btn-action-sm btn-edit-sm me-2" @onclick="() => AbrirModalEdicao(p)" title="Editar">
+                                    <i class="bi bi-pencil-fill"></i>
                                 </button>
-                                <button class="btn btn-outline-danger btn-sm border-0" @onclick="() => DeletarAsync(p.Id, p.Tipo)">
-                                    <i class="bi bi-trash"></i>
+                                <button class="btn-action-sm btn-delete-sm" @onclick="() => DeletarAsync(p.Id, p.Tipo)" title="Excluir">
+                                    <i class="bi bi-trash-fill"></i>
                                 </button>
                             </td>
                         </tr>
@@ -95,94 +108,110 @@
     }
 </div>
 
-@* Modal de Cadastro *@
+@* Modal de Cadastro/Edição *@
 @if (exibirModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title">@(novoPedido.Id == 0 ? "📝 Novo Pedido" : "✏️ Editar Pedido")</h5>
-                    <button type="button" class="btn-close" @onclick="FecharModal"></button>
-                </div>
-                <EditForm Model="@novoPedido" OnValidSubmit="SalvarAsync">
-                    <div class="modal-body p-4">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Tipo de Pedido</label>
-                            <InputSelect @bind-Value="novoPedido.Tipo" class="form-select" required>
-                                <option value="">Selecione...</option>
-                                <option value="Venda">Venda (Entrada)</option>
-                                <option value="Compra">Compra (Saída)</option>
-                            </InputSelect>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Descrição</label>
-                            <InputText @bind-Value="novoPedido.Descricao" class="form-control" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Valor Total (R$)</label>
-                            <InputNumber @bind-Value="novoPedido.ValorTotal" class="form-control" step="0.01" required />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">ID do Cliente</label>
-                            <div class="input-group">
-                                <InputNumber @bind-Value="novoPedido.ClienteId" class="form-control" placeholder="0" required readonly />
-                                <button class="btn btn-outline-secondary" type="button" @onclick="AbrirSelecaoCliente">
-                                    <i class="bi bi-search"></i>
-                                </button>
-                            </div>
-                            @if (clienteSelecionado != null)
-                            {
-                                <div class="form-text text-primary fw-bold">
-                                    <i class="bi bi-person-check"></i> @clienteSelecionado.Nome
-                                </div>
-                            }
-                            else if (novoPedido.ClienteId > 0)
-                            {
-                                <div class="form-text text-danger">Cliente não encontrado.</div>
-                            }
-                        </div>
-                    </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
-                        <button type="submit" class="btn btn-warning px-4" disabled="@(clienteSelecionado == null)">
-                            @(novoPedido.Id == 0 ? "Salvar Pedido" : "Salvar Alterações")
-                        </button>
-                    </div>
-                </EditForm>
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi @(novoPedido.Id == 0 ? "bi-plus-square-fill" : "bi-pencil-square")"></i>
+                    @(novoPedido.Id == 0 ? "Novo Pedido" : "Editar Pedido")
+                </h5>
+                <button type="button" class="modal-close-btn" @onclick="FecharModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
+            <EditForm Model="@novoPedido" OnValidSubmit="SalvarAsync">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Transação</label>
+                        <InputSelect @bind-Value="novoPedido.Tipo" class="form-select" required>
+                            <option value="">Selecione o tipo...</option>
+                            <option value="Venda">Venda (Entrada de Capital)</option>
+                            <option value="Compra">Despesa (Saída de Capital)</option>
+                        </InputSelect>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Descrição / Observações</label>
+                        <InputText @bind-Value="novoPedido.Descricao" class="form-input" placeholder="Ex: Venda de 10kg de Morango" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Valor Total (R$)</label>
+                        <div class="position-relative">
+                            <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--text-secondary);">R$</span>
+                            <InputNumber @bind-Value="novoPedido.ValorTotal" class="form-input" style="padding-left: 3rem;" step="0.01" required />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Vincular Cliente</label>
+                        <div class="client-selector">
+                            <div class="position-relative flex-grow-1">
+                                <i class="bi bi-person" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                                <InputNumber @bind-Value="novoPedido.ClienteId" class="form-input" style="padding-left: 2.5rem;" placeholder="ID do Cliente" required readonly />
+                            </div>
+                            <button class="btn-modal" type="button" style="background: #f1f5f9; padding: 0 1.25rem;" @onclick="AbrirSelecaoCliente">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                        
+                        @if (clienteSelecionado != null)
+                        {
+                            <div class="client-preview">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Cliente: @clienteSelecionado.Nome
+                            </div>
+                        }
+                        else if (novoPedido.ClienteId > 0)
+                        {
+                            <div class="form-text text-danger mt-2">
+                                <i class="bi bi-exclamation-triangle"></i> Cliente não identificado.
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal btn-cancel" @onclick="FecharModal">Cancelar</button>
+                    <button type="submit" class="btn-modal btn-submit" disabled="@(clienteSelecionado == null)">
+                        @(novoPedido.Id == 0 ? "Finalizar Pedido" : "Atualizar Pedido")
+                    </button>
+                </div>
+            </EditForm>
         </div>
     </div>
 }
 
-@* Modal de Seleção de Cliente *@
+@* Picker de Cliente *@
 @if (exibirSelecaoCliente)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content shadow-lg border-0">
-                <div class="modal-header bg-secondary text-white">
-                    <h6 class="modal-title">Selecionar Cliente</h6>
-                    <button type="button" class="btn-close btn-close-white" @onclick="FecharSelecaoCliente"></button>
-                </div>
-                <div class="modal-body p-3">
-                    <input type="text" class="form-control form-control-sm mb-3" placeholder="Filtrar por nome..."
+    <div class="picker-modal">
+        <div class="picker-content">
+            <div class="picker-header">
+                <h6 class="m-0 fw-bold">Selecionar Cliente</h6>
+                <button type="button" class="btn-close" @onclick="FecharSelecaoCliente"></button>
+            </div>
+            <div class="p-3 border-bottom">
+                <div class="position-relative">
+                    <i class="bi bi-filter" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                    <input type="text" class="form-control form-control-sm" style="padding-left: 2rem; border-radius: 8px;" placeholder="Filtrar clientes..."
                            @bind="termoBuscaCliente" @bind:event="oninput" />
-                    
-                    <div class="list-group list-group-flush overflow-auto" style="max-height: 200px;">
-                        @foreach (var c in ClientesFiltradosParaSelecao)
-                        {
-                            <button type="button" class="list-group-item list-group-item-action py-2 small"
-                                    @onclick="() => SelecionarCliente(c)">
-                                <strong>#@c.Id</strong> - @c.Nome
-                            </button>
-                        }
-                        @if (!ClientesFiltradosParaSelecao.Any())
-                        {
-                            <div class="p-2 text-muted small">Nenhum cliente encontrado.</div>
-                        }
-                    </div>
                 </div>
+            </div>
+            <div class="picker-body">
+                @foreach (var c in ClientesFiltradosParaSelecao)
+                {
+                    <button type="button" class="picker-item" @onclick="() => SelecionarCliente(c)">
+                        <strong>#@c.Id</strong>
+                        <span>@c.Nome</span>
+                    </button>
+                }
+                @if (!ClientesFiltradosParaSelecao.Any())
+                {
+                    <div class="text-center py-4 text-muted small">Nenhum cliente encontrado.</div>
+                }
             </div>
         </div>
     </div>
@@ -202,7 +231,13 @@
     private bool exibirSelecaoCliente = false;
 
     private IEnumerable<Pedido> PedidosFiltrados =>
-        pedidos.FiltrarPorTexto(termoBusca, p => p.Tipo);
+        pedidos?.Where(p => 
+            string.IsNullOrWhiteSpace(termoBusca) || 
+            p.Tipo.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) ||
+            p.Id.ToString().Contains(termoBusca) ||
+            p.ClienteId.ToString().Contains(termoBusca) ||
+            (p.Cliente?.Nome?.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) ?? false)
+        ) ?? Enumerable.Empty<Pedido>();
 
     private IEnumerable<Cliente> ClientesFiltradosParaSelecao =>
         todosClientes.FiltrarPorTexto(termoBuscaCliente, c => c.Nome);
@@ -213,8 +248,6 @@
         await CarregarClientesAsync();
     }
 
-    // --- Métodos CRUD ---
-
     private async Task CarregarClientesAsync()
     {
         todosClientes = await CrudExtensions.CarregarDadosSafeAsync(() => ClienteService.GetAllAsync(), "Clientes");
@@ -222,8 +255,7 @@
 
     private async Task ListarAsync()
     {
-        pedidos = await CrudExtensions.CarregarDadosSafeAsync(()
-        => ApiService.GetAllAsync(), "Pedidos");
+        pedidos = await CrudExtensions.CarregarDadosSafeAsync(() => ApiService.GetAllAsync(), "Pedidos");
     }
 
     private async Task SalvarAsync()
@@ -235,7 +267,6 @@
         }
 
         bool sucesso;
-
         if (novoPedido.Id == 0)
         {
             sucesso = await CrudExtensions.SalvarSafeAsync(() => ApiService.CreateAsync(novoPedido), "Pedidos");
@@ -254,23 +285,12 @@
 
     private async Task DeletarAsync(int id, string nome)
     {
-        var confirmou = await JSRuntime.InvokeAsync<bool>(
-            "confirm",
-            $"Deseja realmente remover o pedido '{nome}'?"
-         );
-
-        if (!confirmou)
-            return;
-
-        var sucesso = await CrudExtensions.DeletarSafeAsync(()
-        => ApiService.DeleteAsync(id), "Pedido");
-
-        if (sucesso)
-            await ListarAsync();
+        var confirmou = await JSRuntime.InvokeAsync<bool>("confirm", $"Deseja realmente remover o pedido '{id}'?");
+        if (!confirmou) return;
+        var sucesso = await CrudExtensions.DeletarSafeAsync(() => ApiService.DeleteAsync(id), "Pedido");
+        if (sucesso) await ListarAsync();
     }
     
-    // --- Controle de UI ---
-
     private void AbrirSelecaoCliente()
     {
         termoBuscaCliente = "";
@@ -312,15 +332,9 @@
             ValorTotal = pedido.ValorTotal,
             ClienteId = pedido.ClienteId
         };
-        
-        // Tenta encontrar o cliente na lista carregada
         clienteSelecionado = todosClientes?.FirstOrDefault(c => c.Id == pedido.ClienteId);
-        
         exibirModal = true;
     }
 
-    private void FecharModal()
-    {
-        exibirModal = false;
-    }
+    private void FecharModal() => exibirModal = false;
 }

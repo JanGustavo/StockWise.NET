@@ -1,35 +1,198 @@
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">StockWise 🍉</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
+<style>
+    /* ==================== ESTILIZAÇÃO DO NAVMENU ==================== */
+    .sidebar-custom {
+        background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+        min-height: 100vh;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+    }
+
+    .brand-section {
+        padding: 2rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 1rem;
+    }
+
+    .brand-logo {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: white;
+        text-decoration: none;
+        letter-spacing: -0.5px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .brand-logo span {
+        animation: bounce 2s infinite;
+        display: inline-block;
+    }
+
+    .nav-container-custom {
+        padding: 0 1rem;
+        flex: 1;
+    }
+
+    .nav-link-custom {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 0.5rem;
+        border-radius: 12px;
+        color: #94a3b8;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Efeito Hover Geral */
+    .nav-link-custom:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        transform: translateX(5px);
+    }
+
+    .nav-link-custom i {
+        font-size: 1.2rem;
+        transition: transform 0.3s ease;
+    }
+
+    .nav-link-custom:hover i {
+        transform: scale(1.2);
+    }
+
+    /* Estados Ativos com Cores Temáticas */
+    
+    /* Estoque - Verde */
+    .nav-link-custom.active[href=""], .nav-link-custom.active[href="/"] {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+    }
+    .nav-link-custom.active[href=""]::before, .nav-link-custom.active[href="/"]::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 20%; bottom: 20%;
+        width: 4px; background: #10b981;
+        border-radius: 0 4px 4px 0;
+    }
+
+    /* Clientes - Azul */
+    .nav-link-custom.active[href="clientes"] {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+    .nav-link-custom.active[href="clientes"]::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 20%; bottom: 20%;
+        width: 4px; background: #3b82f6;
+        border-radius: 0 4px 4px 0;
+    }
+
+    /* Equipe - Roxo */
+    .nav-link-custom.active[href="funcionarios"] {
+        background: rgba(139, 92, 246, 0.15);
+        color: #8b5cf6;
+    }
+    .nav-link-custom.active[href="funcionarios"]::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 20%; bottom: 20%;
+        width: 4px; background: #8b5cf6;
+        border-radius: 0 4px 4px 0;
+    }
+
+    /* Pedidos - Rosa */
+    .nav-link-custom.active[href="pedidos"] {
+        background: rgba(244, 63, 94, 0.15);
+        color: #f43f5e;
+    }
+    .nav-link-custom.active[href="pedidos"]::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 20%; bottom: 20%;
+        width: 4px; background: #f43f5e;
+        border-radius: 0 4px 4px 0;
+    }
+
+    .navbar-toggler-custom {
+        display: none;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    @@keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    @@media (max-width: 640.98px) {
+        .sidebar-custom {
+            min-height: auto;
+            width: 100%;
+        }
+        .navbar-toggler-custom {
+            display: block;
+        }
+        .nav-container-custom.collapse {
+            display: none;
+        }
+        .brand-section {
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            margin-bottom: 0;
+            border-bottom: none;
+        }
+    }
+</style>
+
+<div class="sidebar-custom">
+    <div class="brand-section">
+        <a class="brand-logo" href="">
+            StockWise <span>🍉</span>
+        </a>
+        <button class="navbar-toggler-custom" @onclick="ToggleNavMenu">
+            <i class="bi bi-list"></i>
         </button>
     </div>
-</div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-shop" aria-hidden="true"></span> 🍎 Estoque
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="clientes">
-                <span class="bi bi-people" aria-hidden="true"></span> 👥 Clientes
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="funcionarios">
-                <span class="bi bi-person-badge" aria-hidden="true"></span> 🛠️ Equipe
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="pedidos">
-                <span class="bi bi-cart-check" aria-hidden="true"></span> 📝 Pedidos
-            </NavLink>
-        </div>
-    </nav>
+    <div class="nav-container-custom @NavMenuCssClass" @onclick="ToggleNavMenu">
+        <nav class="flex-column">
+            <div class="nav-item">
+                <NavLink class="nav-link-custom" href="" Match="NavLinkMatch.All">
+                    <i class="bi bi-grid-1x2-fill"></i> 🍎 Estoque
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link-custom" href="clientes">
+                    <i class="bi bi-people-fill"></i> 👥 Clientes
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link-custom" href="funcionarios">
+                    <i class="bi bi-person-badge-fill"></i> 🛠️ Equipe
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link-custom" href="pedidos">
+                    <i class="bi bi-receipt-cutoff"></i> 📝 Pedidos
+                </NavLink>
+            </div>
+        </nav>
+    </div>
 </div>
 
 @code {
