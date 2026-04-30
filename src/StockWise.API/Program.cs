@@ -3,6 +3,7 @@ using StockWise.Infrastructure.Persistence;
 using StockWise.Infrastructure.Repositories;
 using StockWise.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,11 +31,9 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    // Mapeia o endpoint da OpenAPI (gera o JSON da documentação)
-    app.MapOpenApi();
-}
+// Mapeia o endpoint da OpenAPI (gera o JSON da documentação)
+app.MapOpenApi();
+app.MapScalarApiReference();
 
 app.UseCors("AllowAll");
 // app.UseHttpsRedirection();

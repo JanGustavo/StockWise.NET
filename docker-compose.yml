@@ -22,7 +22,11 @@ services:
       - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=db;Database=stockwisedb;Username=admin;Password=secretpassword
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=admin
+      - DB_PASSWORD=secretpassword
+      - DB_NAME=stockwisedb
     depends_on:
       - db
 
