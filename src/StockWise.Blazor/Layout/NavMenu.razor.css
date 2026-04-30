@@ -28,6 +28,12 @@
     gap: 0.5rem;
 }
 
+.brand-logo:hover{
+    color: #3b82f6;
+    font-size: 1.6rem;
+    animation: bounce 2s infinite;
+}
+
 .brand-logo span {
     animation: bounce 2s infinite;
     display: inline-block;

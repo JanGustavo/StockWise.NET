@@ -8,10 +8,10 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Configura o HttpClient para apontar para a nossa API
-// Em produção, isso viria de um arquivo de configuração
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5000/";
 builder.Services.AddScoped(sp => new HttpClient 
 { 
-    BaseAddress = new Uri("http://localhost:5202/") 
+    BaseAddress = new Uri(apiBaseUrl) 
 });
 
 builder.Services.AddScoped<FrutaApiService>();
