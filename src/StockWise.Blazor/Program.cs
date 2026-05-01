@@ -7,11 +7,10 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Configura o HttpClient para apontar para a nossa API
-var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5000/";
+// Configura o HttpClient para apontar para a nossa API (dinâmico para deploy)
 builder.Services.AddScoped(sp => new HttpClient 
 { 
-    BaseAddress = new Uri(apiBaseUrl) 
+    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress + "api/") 
 });
 
 builder.Services.AddScoped<FrutaApiService>();
