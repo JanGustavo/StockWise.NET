@@ -7,10 +7,10 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Configura o HttpClient para apontar para a base do site (o Nginx cuida do roteamento /api)
+// Configura o HttpClient para apontar para a nova base da API no Nginx
 builder.Services.AddScoped(sp => new HttpClient 
 { 
-    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) 
+    BaseAddress = new Uri("https://jangustavo.me/apis/stockwise/") 
 });
 
 builder.Services.AddScoped<FrutaApiService>();
