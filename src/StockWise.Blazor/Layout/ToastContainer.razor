@@ -1,0 +1,95 @@
+@using StockWise.Blazor.Services
+@inject NotificationService NotificationService
+@implements IDisposable
+
+<div class="toast-container-custom">
+    @foreach (var toast in toasts)
+    {
+        <div class="toast-card @GetCustomStyle(toast.Type)" role="alert">
+            <div class="toast-content">
+                <div class="toast-icon-wrapper">
+                    <i class="@GetIconClass(toast.Type)"></i>
+                </div>
+                <div class="toast-text-wrapper">
+                    <strong class="toast-title">@GetTitle(toast.Type)</strong>
+                    <span class="toast-message">@toast.Message</span>
+                </div>
+                <button type="button" class="toast-close-btn" @onclick="() => RemoveToast(toast)">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+            <div class="toast-progress">
+                <div class="toast-progress-bar"></div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ToastModel> toasts = new();
+
+    protected override void OnInitialized()
+    {
+        NotificationService.OnShow += AddToast;
+    }
+
+    private void AddToast(string message, NotificationType type)
+    {
+        var toast = new ToastModel { Message = message, Type = type };
+        toasts.Add(toast);
+        StateHasChanged();
+
+        // Auto remove after 5 seconds
+        Task.Delay(5000).ContinueWith(_ =>
+        {
+            RemoveToast(toast);
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private void RemoveToast(ToastModel toast)
+    {
+        if (toasts.Contains(toast))
+        {
+            toasts.Remove(toast);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private string GetCustomStyle(NotificationType type) => type switch
+    {
+        NotificationType.Success => "toast-success-style",
+        NotificationType.Error => "toast-error-style",
+        NotificationType.Warning => "toast-warning-style",
+        _ => ""
+    };
+
+    private string GetIconClass(NotificationType type) => type switch
+    {
+        NotificationType.Success => "bi bi-check-circle-fill",
+        NotificationType.Error => "bi bi-exclamation-triangle-fill",
+        NotificationType.Warning => "bi bi-exclamation-circle-fill",
+        _ => "bi bi-info-circle-fill"
+
+
+    };
+
+    private string GetTitle(NotificationType type) => type switch
+    {
+        NotificationType.Success => "Sucesso",
+        NotificationType.Error => "Erro",
+        NotificationType.Warning => "Aviso",
+        _ => "Notificação"
+    };
+
+    public void Dispose()
+    {
+        NotificationService.OnShow -= AddToast;
+    }
+
+    private class ToastModel
+    {
+        public string Message { get; set; } = "";
+        public NotificationType Type { get; set; }
+    }
+}

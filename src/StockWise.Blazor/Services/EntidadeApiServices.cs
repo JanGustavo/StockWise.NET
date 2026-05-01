@@ -9,9 +9,9 @@ public class ClienteApiService
     public ClienteApiService(HttpClient http) => _http = http;
 
     public async Task<List<Cliente>> GetAllAsync() => await _http.GetFromJsonAsync<List<Cliente>>("api/clientes") ?? new();
-    public async Task CreateAsync(Cliente cliente) { var r = await _http.PostAsJsonAsync("api/clientes", cliente); r.EnsureSuccessStatusCode(); }
-    public async Task UpdateAsync(Cliente cliente) { var r = await _http.PutAsJsonAsync($"api/clientes/{cliente.Id}", cliente); r.EnsureSuccessStatusCode(); }
-    public async Task DeleteAsync(int id) { var r = await _http.DeleteAsync($"api/clientes/{id}"); r.EnsureSuccessStatusCode(); }
+    public async Task<HttpResponseMessage> CreateAsync(Cliente cliente) => await _http.PostAsJsonAsync("api/clientes", cliente);
+    public async Task<HttpResponseMessage> UpdateAsync(Cliente cliente) => await _http.PutAsJsonAsync($"api/clientes/{cliente.Id}", cliente);
+    public async Task<HttpResponseMessage> DeleteAsync(int id) => await _http.DeleteAsync($"api/clientes/{id}");
 }
 
 public class FuncionarioApiService
@@ -20,9 +20,9 @@ public class FuncionarioApiService
     public FuncionarioApiService(HttpClient http) => _http = http;
 
     public async Task<List<Funcionario>> GetAllAsync() => await _http.GetFromJsonAsync<List<Funcionario>>("api/funcionarios") ?? new();
-    public async Task CreateAsync(Funcionario funcionario) { var r = await _http.PostAsJsonAsync("api/funcionarios", funcionario); r.EnsureSuccessStatusCode(); }
-    public async Task UpdateAsync(Funcionario funcionario) { var r = await _http.PutAsJsonAsync($"api/funcionarios/{funcionario.Id}", funcionario); r.EnsureSuccessStatusCode(); }
-    public async Task DeleteAsync(int id) { var r = await _http.DeleteAsync($"api/funcionarios/{id}"); r.EnsureSuccessStatusCode(); }
+    public async Task<HttpResponseMessage> CreateAsync(Funcionario funcionario) => await _http.PostAsJsonAsync("api/funcionarios", funcionario);
+    public async Task<HttpResponseMessage> UpdateAsync(Funcionario funcionario) => await _http.PutAsJsonAsync($"api/funcionarios/{funcionario.Id}", funcionario);
+    public async Task<HttpResponseMessage> DeleteAsync(int id) => await _http.DeleteAsync($"api/funcionarios/{id}");
 }
 
 public class PedidoApiService
@@ -31,7 +31,7 @@ public class PedidoApiService
     public PedidoApiService(HttpClient http) => _http = http;
 
     public async Task<List<Pedido>> GetAllAsync() => await _http.GetFromJsonAsync<List<Pedido>>("api/pedidos") ?? new();
-    public async Task CreateAsync(Pedido pedido) { var r = await _http.PostAsJsonAsync("api/pedidos", pedido); r.EnsureSuccessStatusCode(); }
-    public async Task UpdateAsync(Pedido pedido) { var r = await _http.PutAsJsonAsync($"api/pedidos/{pedido.Id}", pedido); r.EnsureSuccessStatusCode(); }
-    public async Task DeleteAsync(int id) { var r = await _http.DeleteAsync($"api/pedidos/{id}"); r.EnsureSuccessStatusCode(); }
+    public async Task<HttpResponseMessage> CreateAsync(Pedido pedido) => await _http.PostAsJsonAsync("api/pedidos", pedido);
+    public async Task<HttpResponseMessage> UpdateAsync(Pedido pedido) => await _http.PutAsJsonAsync($"api/pedidos/{pedido.Id}", pedido);
+    public async Task<HttpResponseMessage> DeleteAsync(int id) => await _http.DeleteAsync($"api/pedidos/{id}");
 }

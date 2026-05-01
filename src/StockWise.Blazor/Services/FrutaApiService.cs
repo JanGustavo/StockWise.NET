@@ -17,21 +17,18 @@ public class FrutaApiService
         return await _http.GetFromJsonAsync<List<Fruta>>("api/frutas") ?? new();
     }
 
-    public async Task CadastrarAsync(Fruta fruta)
+    public async Task<HttpResponseMessage> CadastrarAsync(Fruta fruta)
     {
-        var r = await _http.PostAsJsonAsync("api/frutas", fruta);
-        r.EnsureSuccessStatusCode();
+        return await _http.PostAsJsonAsync("api/frutas", fruta);
     }
 
-    public async Task AtualizarAsync(Fruta fruta)
+    public async Task<HttpResponseMessage> AtualizarAsync(Fruta fruta)
     {
-        var r = await _http.PutAsJsonAsync($"api/frutas/{fruta.Nome}", fruta);
-        r.EnsureSuccessStatusCode();
+        return await _http.PutAsJsonAsync($"api/frutas/{fruta.Nome}", fruta);
     }
 
-    public async Task RemoverAsync(string nome)
+    public async Task<HttpResponseMessage> RemoverAsync(string nome)
     {
-        var r = await _http.DeleteAsync($"api/frutas/{nome}");
-        r.EnsureSuccessStatusCode();
+        return await _http.DeleteAsync($"api/frutas/{nome}");
     }
 }

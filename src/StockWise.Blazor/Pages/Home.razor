@@ -6,6 +6,7 @@
 @using StockWise.Blazor.Services
 @using StockWise.Domain.Extensions
 @inject FrutaApiService ApiService
+@inject NotificationService Notification
 @inject IJSRuntime JSRuntime
 
 <PageTitle>StockWise - Gestão de Frutas</PageTitle>
@@ -161,33 +162,44 @@
 
     private async Task ListarAsync()
     {
-        frutas = await CrudExtensions.CarregarDadosSafeAsync(
-            () => ApiService.GetFrutasAsync(), "Frutas");
+        try
+        {
+            frutas = await ApiService.GetFrutasAsync();
+        }
+        catch (Exception ex)
+        {
+            Notification.ShowError($"Erro ao carregar estoque: {ex.Message}");
+            frutas = new();
+        }
     }
 
     private async Task SalvarFruta()
     {
-        bool sucesso;
+        HttpResponseMessage response;
+        string acao = novaFruta.Id == 0 ? "cadastrar" : "atualizar";
 
-        if (novaFruta.Id == 0)
+        try
         {
-            sucesso = await CrudExtensions.SalvarSafeAsync(
-                () => ApiService.CadastrarAsync(novaFruta),
-                "Fruta"
-            );
-        }
-        else
-        {
-            sucesso = await CrudExtensions.AtualizarSafeAsync(
-                () => ApiService.AtualizarAsync(novaFruta),
-                "Fruta"
-            );
-        }
+            if (novaFruta.Id == 0)
+                response = await ApiService.CadastrarAsync(novaFruta);
+            else
+                response = await ApiService.AtualizarAsync(novaFruta);
 
-        if (sucesso)
+            if (response.IsSuccessStatusCode)
+            {
+                Notification.ShowSuccess($"Fruta {acao}da com sucesso!");
+                await ListarAsync();
+                FecharModal();
+            }
+            else
+            {
+                var erro = await ApiServiceHelper.GetErrorMessageAsync(response);
+                Notification.ShowError($"Erro ao {acao}: {erro}");
+            }
+        }
+        catch (Exception ex)
         {
-            await ListarAsync();
-            FecharModal();
+            Notification.ShowError($"Erro crítico ao {acao}: {ex.Message}");
         }
     }
 
@@ -201,13 +213,24 @@
         if (!confirmou)
             return;
 
-        var sucesso = await CrudExtensions.DeletarSafeAsync(
-            () => ApiService.RemoverAsync(nome),
-            "Fruta"
-        );
-
-        if (sucesso)
-            await ListarAsync();
+        try
+        {
+            var response = await ApiService.RemoverAsync(nome);
+            if (response.IsSuccessStatusCode)
+            {
+                Notification.ShowSuccess("Fruta removida com sucesso!");
+                await ListarAsync();
+            }
+            else
+            {
+                var erro = await ApiServiceHelper.GetErrorMessageAsync(response);
+                Notification.ShowError($"Erro ao remover: {erro}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.ShowError($"Erro crítico ao remover: {ex.Message}");
+        }
     }
 
     private void AbrirModal()

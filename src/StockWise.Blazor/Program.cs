@@ -17,5 +17,6 @@ builder.Services.AddScoped<FrutaApiService>();
 builder.Services.AddScoped<ClienteApiService>();
 builder.Services.AddScoped<FuncionarioApiService>();
 builder.Services.AddScoped<PedidoApiService>();
+builder.Services.AddScoped<NotificationService>();
 
 await builder.Build().RunAsync();

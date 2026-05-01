@@ -6,6 +6,7 @@
 @using StockWise.Blazor.Services
 @using StockWise.Domain.Extensions
 @inject FuncionarioApiService ApiService
+@inject NotificationService Notification
 @inject IJSRuntime JSRuntime
 
 <PageTitle>StockWise - Funcionários</PageTitle>
@@ -156,25 +157,44 @@
 
     private async Task ListarAsync()
     {
-        funcionarios = await CrudExtensions.CarregarDadosSafeAsync(() => ApiService.GetAllAsync(), "Funcionários");
+        try
+        {
+            funcionarios = await ApiService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Notification.ShowError($"Erro ao carregar equipe: {ex.Message}");
+            funcionarios = new();
+        }
     }
 
     private async Task SalvarAsync()
     {
-        bool sucesso;
-        if (novoFuncionario.Id == 0)
-        {
-            sucesso = await CrudExtensions.SalvarSafeAsync(() => ApiService.CreateAsync(novoFuncionario), "Funcionários");
-        }
-        else
-        {
-            sucesso = await CrudExtensions.AtualizarSafeAsync(() => ApiService.UpdateAsync(novoFuncionario), "Funcionários");
-        }
+        HttpResponseMessage response;
+        string acao = novoFuncionario.Id == 0 ? "cadastrar" : "atualizar";
 
-        if (sucesso)
+        try
         {
-            FecharModal();
-            await ListarAsync();
+            if (novoFuncionario.Id == 0)
+                response = await ApiService.CreateAsync(novoFuncionario);
+            else
+                response = await ApiService.UpdateAsync(novoFuncionario);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Notification.ShowSuccess($"Funcionário {acao}do com sucesso!");
+                FecharModal();
+                await ListarAsync();
+            }
+            else
+            {
+                var erro = await ApiServiceHelper.GetErrorMessageAsync(response);
+                Notification.ShowError($"Erro ao {acao}: {erro}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.ShowError($"Erro crítico ao {acao}: {ex.Message}");
         }
     }
 
@@ -182,8 +202,25 @@
     {
         var confirmou = await JSRuntime.InvokeAsync<bool>("confirm", $"Deseja realmente remover o funcionário '{nome}'?");
         if (!confirmou) return;
-        var sucesso = await CrudExtensions.DeletarSafeAsync(() => ApiService.DeleteAsync(id), "Funcionário");
-        if (sucesso) await ListarAsync();
+
+        try
+        {
+            var response = await ApiService.DeleteAsync(id);
+            if (response.IsSuccessStatusCode)
+            {
+                Notification.ShowSuccess("Funcionário removido com sucesso!");
+                await ListarAsync();
+            }
+            else
+            {
+                var erro = await ApiServiceHelper.GetErrorMessageAsync(response);
+                Notification.ShowError($"Erro ao remover: {erro}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.ShowError($"Erro crítico ao remover: {ex.Message}");
+        }
     }
 
     private void AbrirModal()

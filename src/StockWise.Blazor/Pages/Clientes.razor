@@ -6,6 +6,7 @@
 @using StockWise.Blazor.Services
 @using StockWise.Domain.Extensions
 @inject ClienteApiService ApiService
+@inject NotificationService Notification
 @inject IJSRuntime JSRuntime
 
 <PageTitle>StockWise - Clientes</PageTitle>
@@ -149,25 +150,44 @@
 
     private async Task ListarAsync()
     {
-        clientes = await CrudExtensions.CarregarDadosSafeAsync(() => ApiService.GetAllAsync(), "Clientes");
+        try
+        {
+            clientes = await ApiService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Notification.ShowError($"Erro ao carregar clientes: {ex.Message}");
+            clientes = new();
+        }
     }
 
     private async Task SalvarAsync()
     {
-        bool sucesso;
-        if (novoCliente.Id == 0)
-        {
-            sucesso = await CrudExtensions.SalvarSafeAsync(() => ApiService.CreateAsync(novoCliente), "Clientes");
-        }
-        else
-        {
-            sucesso = await CrudExtensions.AtualizarSafeAsync(() => ApiService.UpdateAsync(novoCliente), "Clientes");
-        }
+        HttpResponseMessage response;
+        string acao = novoCliente.Id == 0 ? "cadastrar" : "atualizar";
 
-        if (sucesso)
+        try
         {
-            FecharModal();
-            await ListarAsync();
+            if (novoCliente.Id == 0)
+                response = await ApiService.CreateAsync(novoCliente);
+            else
+                response = await ApiService.UpdateAsync(novoCliente);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Notification.ShowSuccess($"Cliente {acao}ado com sucesso!");
+                FecharModal();
+                await ListarAsync();
+            }
+            else
+            {
+                var erro = await ApiServiceHelper.GetErrorMessageAsync(response);
+                Notification.ShowError($"Erro ao {acao}: {erro}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.ShowError($"Erro crítico ao {acao}: {ex.Message}");
         }
     }
 
@@ -175,8 +195,25 @@
     {
         var confirmou = await JSRuntime.InvokeAsync<bool>("confirm", $"Deseja realmente remover o cliente '{nome}'?");
         if (!confirmou) return;
-        var sucesso = await CrudExtensions.DeletarSafeAsync(() => ApiService.DeleteAsync(id), "Cliente");
-        if (sucesso) await ListarAsync();
+
+        try
+        {
+            var response = await ApiService.DeleteAsync(id);
+            if (response.IsSuccessStatusCode)
+            {
+                Notification.ShowSuccess("Cliente removido com sucesso!");
+                await ListarAsync();
+            }
+            else
+            {
+                var erro = await ApiServiceHelper.GetErrorMessageAsync(response);
+                Notification.ShowError($"Erro ao remover: {erro}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.ShowError($"Erro crítico ao remover: {ex.Message}");
+        }
     }
 
     private void AbrirModal()

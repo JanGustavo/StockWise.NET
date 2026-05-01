@@ -8,6 +8,7 @@
 
 @inject PedidoApiService ApiService
 @inject ClienteApiService ClienteService
+@inject NotificationService Notification
 @inject IJSRuntime JSRuntime
 
 <PageTitle>StockWise - Pedidos</PageTitle>
@@ -267,45 +268,89 @@
 
     private async Task CarregarClientesAsync()
     {
-        todosClientes = await CrudExtensions.CarregarDadosSafeAsync(() => ClienteService.GetAllAsync(), "Clientes");
+        try
+        {
+            todosClientes = await ClienteService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Notification.ShowError($"Erro ao carregar clientes: {ex.Message}");
+            todosClientes = new();
+        }
     }
 
     private async Task ListarAsync()
     {
-        pedidos = await CrudExtensions.CarregarDadosSafeAsync(() => ApiService.GetAllAsync(), "Pedidos");
+        try
+        {
+            pedidos = await ApiService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Notification.ShowError($"Erro ao carregar pedidos: {ex.Message}");
+            pedidos = new();
+        }
     }
 
     private async Task SalvarAsync()
     {
         if (novoPedido.ValorTotal <= 0)
         {
-            await JSRuntime.InvokeVoidAsync("alert", "O valor do pedido deve ser maior que zero!");
+            Notification.ShowWarning("O valor do pedido deve ser maior que zero!");
             return;
         }
 
-        bool sucesso;
-        if (novoPedido.Id == 0)
-        {
-            sucesso = await CrudExtensions.SalvarSafeAsync(() => ApiService.CreateAsync(novoPedido), "Pedidos");
-        }
-        else
-        {
-            sucesso = await CrudExtensions.AtualizarSafeAsync(() => ApiService.UpdateAsync(novoPedido), "Pedidos");
-        }
+        HttpResponseMessage response;
+        string acao = novoPedido.Id == 0 ? "finalizar" : "atualizar";
 
-        if (sucesso)
+        try
         {
-            FecharModal();
-            await ListarAsync();
+            if (novoPedido.Id == 0)
+                response = await ApiService.CreateAsync(novoPedido);
+            else
+                response = await ApiService.UpdateAsync(novoPedido);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Notification.ShowSuccess($"Pedido {acao}do com sucesso!");
+                FecharModal();
+                await ListarAsync();
+            }
+            else
+            {
+                var erro = await ApiServiceHelper.GetErrorMessageAsync(response);
+                Notification.ShowError($"Erro ao {acao} pedido: {erro}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.ShowError($"Erro crítico ao {acao} pedido: {ex.Message}");
         }
     }
 
     private async Task DeletarAsync(int id, string nome)
     {
-        var confirmou = await JSRuntime.InvokeAsync<bool>("confirm", $"Deseja realmente remover o pedido '{id}'?");
+        var confirmou = await JSRuntime.InvokeAsync<bool>("confirm", $"Deseja realmente remover o pedido '#{id}'?");
         if (!confirmou) return;
-        var sucesso = await CrudExtensions.DeletarSafeAsync(() => ApiService.DeleteAsync(id), "Pedido");
-        if (sucesso) await ListarAsync();
+
+        try
+        {
+            var response = await ApiService.DeleteAsync(id);
+            if (response.IsSuccessStatusCode)
+            {
+                Notification.ShowSuccess("Pedido removido com sucesso!");
+                await ListarAsync();
+            }
+            else
+            {
+                var erro = await ApiServiceHelper.GetErrorMessageAsync(response);
+                Notification.ShowError($"Erro ao remover pedido: {erro}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.ShowError($"Erro crítico ao remover pedido: {ex.Message}");
+        }
     }
     
     private void AbrirSelecaoCliente()
