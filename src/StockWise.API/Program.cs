@@ -33,12 +33,13 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 // Mapeia o endpoint da OpenAPI (gera o JSON da documentação)
 app.MapOpenApi();
+
+// Scalar configurado para o tema Mars e compatível com a versão instalada
 app.MapScalarApiReference(options => 
 {
     options.WithTitle("StockWise API")
            .WithTheme(ScalarTheme.Mars)
-           .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
-           .WithEndpointPrefix("/scalar/{version}"); // Garante o prefixo correto
+           .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
 });
 
 app.UseCors("AllowAll");
