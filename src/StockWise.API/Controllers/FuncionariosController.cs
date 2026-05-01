@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using StockWise.Domain.Entities;
 using StockWise.Infrastructure.Persistence;
 using BCrypt.Net;
+using Npgsql;
 
 namespace StockWise.API.Controllers;
 
@@ -27,8 +28,6 @@ public class FuncionariosController : ControllerBase
     public async Task<ActionResult<Funcionario>> Post(Funcionario funcionario)
     {
         funcionario.DataCadastro = DateTime.SpecifyKind(funcionario.DataCadastro, DateTimeKind.Utc);
-        
-        // Hash da senha antes de salvar
         funcionario.Senha = BCrypt.Net.BCrypt.HashPassword(funcionario.Senha);
         
         _context.Funcionarios.Add(funcionario);
@@ -39,24 +38,37 @@ public class FuncionariosController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
+        if (id == 1) return BadRequest("O usuário administrador padrão não pode ser excluído.");
+
         var funcionario = await _context.Funcionarios.FindAsync(id);
         if (funcionario == null) return NotFound();
 
-        _context.Funcionarios.Remove(funcionario);
-        await _context.SaveChangesAsync();
-        return Ok();
+        try 
+        {
+            _context.Funcionarios.Remove(funcionario);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx && pgEx.SqlState == "P0001")
+        {
+            // Captura o RAISE EXCEPTION da Trigger do banco
+            return BadRequest(pgEx.MessageText);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro ao deletar: {ex.Message}");
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<ActionResult> Put(int id, Funcionario funcionario)
     {
+        if (id == 1) return BadRequest("O usuário administrador padrão não pode ser editado.");
         if (id != funcionario.Id) return BadRequest();
 
         var funcionarioExistente = await _context.Funcionarios.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id);
         if (funcionarioExistente == null) return NotFound();
 
-        // Se a senha enviada for diferente da senha atual no banco, fazemos o hash
-        // Nota: Em um sistema real, você teria uma lógica mais refinada para saber se o usuário quer trocar a senha.
         if (funcionario.Senha != funcionarioExistente.Senha)
         {
             funcionario.Senha = BCrypt.Net.BCrypt.HashPassword(funcionario.Senha);
@@ -73,6 +85,15 @@ public class FuncionariosController : ControllerBase
         {
             if (!FuncionarioExists(id)) return NotFound();
             else throw;
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx && pgEx.SqlState == "P0001")
+        {
+            // Captura o RAISE EXCEPTION da Trigger do banco
+            return BadRequest(pgEx.MessageText);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro ao atualizar: {ex.Message}");
         }
 
         return NoContent();

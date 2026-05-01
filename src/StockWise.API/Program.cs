@@ -37,7 +37,8 @@ app.MapScalarApiReference(options =>
 {
     options.WithTitle("StockWise API")
            .WithTheme(ScalarTheme.Mars)
-           .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+           .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+           .WithEndpointPrefix("/scalar/{version}"); // Garante o prefixo correto
 });
 
 app.UseCors("AllowAll");
