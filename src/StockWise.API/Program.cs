@@ -33,7 +33,12 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 // Mapeia o endpoint da OpenAPI (gera o JSON da documentação)
 app.MapOpenApi();
-app.MapScalarApiReference();
+app.MapScalarApiReference(options => 
+{
+    options.WithTitle("StockWise API")
+           .WithTheme(ScalarTheme.Mars)
+           .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+});
 
 app.UseCors("AllowAll");
 // app.UseHttpsRedirection();
